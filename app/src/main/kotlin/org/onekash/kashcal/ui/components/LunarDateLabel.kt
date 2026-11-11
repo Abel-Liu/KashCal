@@ -26,8 +26,9 @@ internal fun LunarDateLabel(
     style: TextStyle = lunarDateStyle,
 ) {
     if (!LocalShowChineseLunarDate.current) return
+    val label = remember(date) { chineseLunarLabel(date) } ?: return
     Text(
-        text = remember(date) { chineseLunarLabel(date) },
+        text = label,
         modifier = modifier,
         color = color.copy(alpha = color.alpha * 0.75f),
         style = style,

@@ -1,13 +1,8 @@
 package org.onekash.kashcal.ui.util
 
-import android.icu.util.Calendar
-import android.icu.util.ChineseCalendar
-import android.icu.util.TimeZone
 import java.time.LocalDate
-import java.time.LocalTime
-import java.time.ZoneOffset
+import kotlin.math.abs
 
-private val chinaOffset = ZoneOffset.ofHours(8)
 private val lunarMonths = listOf(
     "正月", "二月", "三月", "四月", "五月", "六月",
     "七月", "八月", "九月", "十月", "冬月", "腊月",
@@ -18,15 +13,36 @@ private val lunarDays = listOf(
     "廿一", "廿二", "廿三", "廿四", "廿五", "廿六", "廿七", "廿八", "廿九", "三十",
 )
 
-internal fun chineseLunarLabel(date: LocalDate): String {
-    // Convert the displayed civil date at noon in China, independent of the device time zone.
-    val lunar = ChineseCalendar().apply {
-        timeZone = TimeZone.getTimeZone("GMT+08:00")
-        timeInMillis = date.atTime(LocalTime.NOON).toInstant(chinaOffset).toEpochMilli()
-    }
-    val day = lunar.get(Calendar.DAY_OF_MONTH)
-    if (day != 1) return lunarDays[day - 1]
+private data class LunarMonthStart(val epochDay: Long, val month: Int)
 
-    val month = lunarMonths[lunar.get(Calendar.MONTH)]
-    return if (lunar.get(Calendar.IS_LEAP_MONTH) == 1) "闰$month" else month
+private val lunarMonthStarts by lazy {
+    buildList {
+        for (row in CHINESE_LUNAR_MONTH_STARTS.trim().lineSequence()) {
+            val fields = row.split(' ')
+            val year = fields.first().toInt()
+            for (field in fields.drop(1)) {
+                val (monthDay, lunarMonth) = field.split(':')
+                val dateCode = monthDay.toInt()
+                val date = LocalDate.of(year, dateCode / 100, dateCode % 100)
+                add(LunarMonthStart(date.toEpochDay(), lunarMonth.toInt()))
+            }
+        }
+    }
+}
+
+/** Returns the label for a Gregorian civil date covered by the published table. */
+internal fun chineseLunarLabel(date: LocalDate): String? {
+    if (date.year !in 1901..2100) return null
+
+    val epochDay = date.toEpochDay()
+    val index = lunarMonthStarts.binarySearchBy(epochDay) { it.epochDay }
+    if (index < 0) {
+        // The insertion point is one past the start of the current lunar month.
+        val monthStart = lunarMonthStarts[-index - 2]
+        return lunarDays[(epochDay - monthStart.epochDay).toInt()]
+    }
+
+    val month = lunarMonthStarts[index].month
+    val label = lunarMonths[abs(month) - 1]
+    return if (month < 0) "闰$label" else label
 }
