@@ -59,6 +59,7 @@ object TestDataStoreFactory {
         every { tagsAboveNotes } returns MutableStateFlow(false)
         every { syncPastDays } returns MutableStateFlow(KashCalDataStore.DEFAULT_SYNC_PAST_DAYS)
         every { shownShareCardTooltip } returns MutableStateFlow(true)
+        every { showChineseLunarDate } returns MutableStateFlow(false)
         every { showWeekNumbers } returns MutableStateFlow(false)
         every { showMultiDayTimedInAllDayStrip } returns MutableStateFlow(false)
         every { showEventEmojis } returns MutableStateFlow(true)

@@ -89,6 +89,8 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 import org.onekash.kashcal.ui.util.LocalDisplayZone
+import org.onekash.kashcal.ui.components.LunarDateLabel
+import org.onekash.kashcal.ui.components.DateWithHolidayMark
 
 /**
  * Draws the Planner: one week as seven day boxes plus a "Different this week" box, paged
@@ -335,8 +337,8 @@ private fun PlannerDayBox(
             .border(if (isToday) 2.dp else 1.dp, if (isToday) colors.primary else colors.outlineVariant, BOX_SHAPE),
     ) {
         Zoomed(zoom) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier
                     .fillMaxWidth()
                     .background(if (isToday) colors.primaryContainer else Color.Transparent)
@@ -345,22 +347,24 @@ private fun PlannerDayBox(
                     .padding(horizontal = 8.dp, vertical = 3.dp)
                     .alpha(if (isPastDay) DEEMPHASIZED_ALPHA else 1f),
             ) {
-                Text(
-                    text = formats.dayLabel(date),
-                    style = MaterialTheme.typography.labelMedium,
-                    fontWeight = FontWeight.SemiBold,
-                    // Weekend days in the weekend colour, as the agenda week bar shows them;
-                    // today's fill wins: error has no contrast pairing with primaryContainer.
-                    color = when {
-                        isToday -> colors.onPrimaryContainer
-                        WeekViewUtils.isWeekend(date) -> colors.error
-                        else -> colors.onSurfaceVariant
-                    },
-                    textAlign = TextAlign.Center,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.weight(1f),
-                )
+                DateWithHolidayMark(date) {
+                    Text(
+                        text = formats.dayLabel(date),
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        // Weekend days in the weekend colour, as the agenda week bar shows them;
+                        // today's fill wins: error has no contrast pairing with primaryContainer.
+                        color = when {
+                            isToday -> colors.onPrimaryContainer
+                            WeekViewUtils.isWeekend(date) -> colors.error
+                            else -> colors.onSurfaceVariant
+                        },
+                        textAlign = TextAlign.Center,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+                LunarDateLabel(date, color = if (isToday) colors.onPrimaryContainer else colors.onSurfaceVariant)
             }
         }
         Box(modifier = Modifier.fillMaxWidth().weight(1f)) {

@@ -117,6 +117,7 @@ import org.onekash.kashcal.util.location.LocationSuggestionService
 import org.onekash.kashcal.ui.util.LocalDisplayZone
 import java.time.LocalTime
 import javax.inject.Inject
+import org.onekash.kashcal.ui.components.LocalShowChineseLunarDate
 
 private const val TAG = "MainActivity"
 
@@ -569,6 +570,7 @@ class MainActivity : FragmentActivity() {
                 // changes.
                 CompositionLocalProvider(
                     LocalTagColors provides uiState.tagColors,
+                    LocalShowChineseLunarDate provides uiState.showChineseLunarDate,
                     LocalDisplayZone provides displayZone,
                 ) {
 

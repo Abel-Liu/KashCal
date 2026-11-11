@@ -123,6 +123,10 @@ import java.time.YearMonth
 import java.time.format.DateTimeFormatter
 import java.util.Calendar as JavaCalendar
 import kotlin.math.floor
+import org.onekash.kashcal.ui.components.LocalShowChineseLunarDate
+import org.onekash.kashcal.ui.components.LunarDateLabel
+import org.onekash.kashcal.ui.components.lunarDateStyle
+import org.onekash.kashcal.ui.components.DateWithHolidayMark
 
 /** Names which date of a range, start or end, the user is editing. */
 enum class DateSelectionMode {
@@ -1071,6 +1075,11 @@ fun InlineDatePickerContent(
                         Spacer(modifier = Modifier.height(4.dp))
 
                         val gridOffset = DateTimeUtils.getDayOfWeekOffset(displayedMonth.atDay(1), firstDayOfWeek)
+                        val lunarHeight = if (LocalShowChineseLunarDate.current) {
+                            with(LocalDensity.current) { lunarDateStyle.lineHeight.toDp() }
+                        } else {
+                            0.dp
+                        }
                         val daysInMonth = displayedMonth.lengthOfMonth()
                         val weeks = ((gridOffset + daysInMonth + 6) / 7)
 
@@ -1091,7 +1100,7 @@ fun InlineDatePickerContent(
                                         Box(
                                             modifier = Modifier
                                                 .weight(1f)
-                                                .height(36.dp)
+                                                .height(36.dp + lunarHeight)
                                                 .padding(2.dp)
                                                 .clip(CircleShape)
                                                 .background(
@@ -1118,16 +1127,22 @@ fun InlineDatePickerContent(
                                                 },
                                             contentAlignment = Alignment.Center
                                         ) {
-                                            Text(
-                                                text = dayIndex.toString(),
-                                                style = MaterialTheme.typography.bodyMedium,
-                                                color = when (cellStyle) {
-                                                    DayCellStyle.SELECTED -> MaterialTheme.colorScheme.inverseOnSurface
-                                                    DayCellStyle.TODAY -> MaterialTheme.colorScheme.onPrimaryContainer
-                                                    DayCellStyle.PLAIN -> MaterialTheme.colorScheme.onSurface
-                                                },
-                                                fontWeight = if (cellStyle == DayCellStyle.PLAIN) FontWeight.Normal else FontWeight.Bold
-                                            )
+                                            val numberColor = when (cellStyle) {
+                                                DayCellStyle.SELECTED -> MaterialTheme.colorScheme.inverseOnSurface
+                                                DayCellStyle.TODAY -> MaterialTheme.colorScheme.onPrimaryContainer
+                                                DayCellStyle.PLAIN -> MaterialTheme.colorScheme.onSurface
+                                            }
+                                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                                DateWithHolidayMark(date) {
+                                                    Text(
+                                                        text = dayIndex.toString(),
+                                                        style = MaterialTheme.typography.bodyMedium,
+                                                        color = numberColor,
+                                                        fontWeight = if (cellStyle == DayCellStyle.PLAIN) FontWeight.Normal else FontWeight.Bold
+                                                    )
+                                                }
+                                                LunarDateLabel(date, color = numberColor)
+                                            }
                                         }
                                     } else {
                                         Spacer(modifier = Modifier.weight(1f))

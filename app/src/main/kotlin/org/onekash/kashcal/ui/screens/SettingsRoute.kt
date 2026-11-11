@@ -180,6 +180,7 @@ fun SettingsRoute(
         val changeNotificationsOn by viewModel.changeNotificationsOn.collectAsStateWithLifecycle()
         val timeFormat by viewModel.timeFormat.collectAsStateWithLifecycle()
         val firstDayOfWeek by viewModel.firstDayOfWeek.collectAsStateWithLifecycle()
+        val showChineseLunarDate by viewModel.showChineseLunarDate.collectAsStateWithLifecycle(initialValue = false)
         val showWeekNumbers by viewModel.showWeekNumbers.collectAsStateWithLifecycle()
         val showMultiDayTimedInAllDayStrip by viewModel.showMultiDayTimedInAllDayStrip.collectAsStateWithLifecycle()
         val widgetMaxEventsPerDay by viewModel.widgetMaxEventsPerDay.collectAsStateWithLifecycle()
@@ -891,6 +892,8 @@ fun SettingsRoute(
                             onTimeFormatChange = viewModel::setTimeFormat,
                             firstDayOfWeek = firstDayOfWeek,
                             onFirstDayOfWeekChange = viewModel::setFirstDayOfWeek,
+                            showChineseLunarDate = showChineseLunarDate,
+                            onShowChineseLunarDateChange = viewModel::setShowChineseLunarDate,
                             showWeekNumbers = showWeekNumbers,
                             onShowWeekNumbersChange = viewModel::setShowWeekNumbers,
                             showMultiDayTimedInAllDayStrip = showMultiDayTimedInAllDayStrip,

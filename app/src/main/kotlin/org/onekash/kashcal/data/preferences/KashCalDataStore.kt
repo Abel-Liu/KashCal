@@ -112,6 +112,13 @@ class KashCalDataStore(
         setPreference(PreferencesKeys.FIRST_DAY_OF_WEEK, day)
     }
 
+    val showChineseLunarDate: Flow<Boolean>
+        get() = getPreference(PreferencesKeys.SHOW_CHINESE_LUNAR_DATE, false)
+
+    suspend fun setShowChineseLunarDate(show: Boolean) {
+        setPreference(PreferencesKeys.SHOW_CHINESE_LUNAR_DATE, show)
+    }
+
     val showWeekNumbers: Flow<Boolean>
         get() = getPreference(PreferencesKeys.SHOW_WEEK_NUMBERS, false)
 

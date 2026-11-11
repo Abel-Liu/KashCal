@@ -25,6 +25,7 @@ object PreferencesKeys {
     val FIRST_DAY_OF_WEEK = intPreferencesKey("first_day_of_week")
 
     /** Shows week numbers in the calendar views. */
+    val SHOW_CHINESE_LUNAR_DATE = booleanPreferencesKey("show_chinese_lunar_date")
     val SHOW_WEEK_NUMBERS = booleanPreferencesKey("show_week_numbers")
 
     /** Render the event form's tag row above the notes/attendees block. */

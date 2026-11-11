@@ -285,6 +285,8 @@ data class HomeUiState(
      * 7 Saturday).
      */
     val firstDayOfWeek: Int = java.util.Calendar.SUNDAY,
+    /** Whether calendar date headers show a Chinese lunar date. */
+    val showChineseLunarDate: Boolean = false,
     /** Whether the month grid shows week numbers. */
     val showWeekNumbers: Boolean = false,
     /** Puts the event form's tag row above the notes; false puts it between notes and guests. */

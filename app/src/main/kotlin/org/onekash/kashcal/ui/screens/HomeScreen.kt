@@ -206,6 +206,10 @@ import java.util.Date
 import java.util.Locale
 import java.util.Calendar as JavaCalendar
 import org.onekash.kashcal.ui.util.LocalDisplayZone
+import org.onekash.kashcal.ui.components.LocalShowChineseLunarDate
+import org.onekash.kashcal.ui.components.LunarDateLabel
+import org.onekash.kashcal.ui.components.lunarDateStyle
+import org.onekash.kashcal.ui.components.DateWithHolidayMark
 
 /**
  * Shows the main calendar screen: every [ViewMode], search, the calendar drawer, the account hub
@@ -1512,10 +1516,23 @@ private fun HomeTopAppBar(
                             verticalAlignment = Alignment.CenterVertically,
                             modifier = Modifier.clickable(onClickLabel = toggleLabel, onClick = onTitleClick)
                         ) {
-                            Text(
-                                text = titleText,
-                                style = MaterialTheme.typography.titleLarge.copy(fontSize = titleFontSize),
-                            )
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                if (uiState.viewMode == ViewMode.DAY) {
+                                    val date = WeekViewUtils.pageToDate(uiState.weekViewPagerPosition)
+                                    DateWithHolidayMark(date) {
+                                        Text(
+                                            text = titleText,
+                                            style = MaterialTheme.typography.titleLarge.copy(fontSize = titleFontSize),
+                                        )
+                                    }
+                                    LunarDateLabel(date)
+                                } else {
+                                    Text(
+                                        text = titleText,
+                                        style = MaterialTheme.typography.titleLarge.copy(fontSize = titleFontSize),
+                                    )
+                                }
+                            }
                             Icon(
                                 Icons.Default.KeyboardArrowDown,
                                 contentDescription = null,
@@ -1672,7 +1689,12 @@ internal fun CalendarGrid(
     showWeekNumbers: Boolean = false,
     isCompact: Boolean = false
 ) {
-    val cellHeight = if (isCompact) 32.dp else 44.dp
+    val lunarHeight = if (LocalShowChineseLunarDate.current) {
+        with(LocalDensity.current) { lunarDateStyle.lineHeight.toDp() } + 4.dp
+    } else {
+        0.dp
+    }
+    val cellHeight = (if (isCompact) 32.dp else 44.dp) + lunarHeight
 
     val monthGrid = remember(year, month, firstDayOfWeekPref) {
         MonthGrid.compute(year, month, firstDayOfWeekPref)
@@ -1714,12 +1736,18 @@ internal fun CalendarGrid(
                                     .clickable { onDateSelected(DayPagerUtils.dayCodeToMs(dayCode)) },
                                 contentAlignment = Alignment.Center
                             ) {
-                                Text(
-                                    text = cell.dayOfMonth.toString(),
-                                    style = if (isCompact) MaterialTheme.typography.bodySmall
-                                            else LocalTextStyle.current,
-                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
-                                )
+                                val numberColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
+                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                    DateWithHolidayMark(dayCode) {
+                                        Text(
+                                            text = cell.dayOfMonth.toString(),
+                                            style = if (isCompact) MaterialTheme.typography.bodySmall
+                                                    else LocalTextStyle.current,
+                                            color = numberColor
+                                        )
+                                    }
+                                    LunarDateLabel(dayCode, color = numberColor)
+                                }
                             }
                         }
                         MonthGrid.DayPosition.MonthDate -> {
@@ -1760,15 +1788,25 @@ internal fun CalendarGrid(
                                 contentAlignment = Alignment.Center
                             ) {
                                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                    Text(
-                                        text = day.toString(),
-                                        style = if (isCompact) MaterialTheme.typography.bodySmall
-                                                else LocalTextStyle.current,
+                                    DateWithHolidayMark(dayCode) {
+                                        Text(
+                                            text = day.toString(),
+                                            style = if (isCompact) MaterialTheme.typography.bodySmall
+                                                    else LocalTextStyle.current,
+                                            color = when {
+                                                isSelected -> MaterialTheme.colorScheme.inverseOnSurface
+                                                isToday -> MaterialTheme.colorScheme.onPrimaryContainer
+                                                cell.isWeekend -> MaterialTheme.colorScheme.error.copy(alpha = 0.8f)
+                                                else -> MaterialTheme.colorScheme.onSurface
+                                            }
+                                        )
+                                    }
+                                    LunarDateLabel(
+                                        dayCode,
                                         color = when {
                                             isSelected -> MaterialTheme.colorScheme.inverseOnSurface
                                             isToday -> MaterialTheme.colorScheme.onPrimaryContainer
-                                            cell.isWeekend -> MaterialTheme.colorScheme.error.copy(alpha = 0.8f)
-                                            else -> MaterialTheme.colorScheme.onSurface
+                                            else -> MaterialTheme.colorScheme.onSurfaceVariant
                                         }
                                     )
                                     if (dayColors.isNotEmpty()) {
@@ -2244,34 +2282,39 @@ private fun AgendaContent(
                     val parts = remember(displayDay, todayDayCode, todayLabel, tomorrowLabel) {
                         AgendaDayHeader.format(displayDay, todayDayCode, todayLabel, tomorrowLabel)
                     }
-                    if (parts.relativeLabel != null) {
-                        // Two-tone: accent the relative word, mute the rest. The join and
-                        // accent range survive reordering (AgendaDayHeader.joinedHeader), so
-                        // date-first locales work.
-                        val header = remember(parts, relativeWithDateTemplate) {
-                            AgendaDayHeader.joinedHeader(parts, relativeWithDateTemplate)
+                    Column(modifier = Modifier.padding(vertical = 8.dp)) {
+                        if (parts.relativeLabel != null) {
+                            // Two-tone: accent the relative word, mute the rest. The join and
+                            // accent range survive reordering (AgendaDayHeader.joinedHeader), so
+                            // date-first locales work.
+                            val header = remember(parts, relativeWithDateTemplate) {
+                                AgendaDayHeader.joinedHeader(parts, relativeWithDateTemplate)
+                            }
+                            val accentColor = MaterialTheme.colorScheme.primary
+                            val mutedColor = MaterialTheme.colorScheme.onSurfaceVariant
+                            DateWithHolidayMark(displayDay) {
+                                Text(
+                                    text = buildAnnotatedString {
+                                        append(header.text)
+                                        addStyle(SpanStyle(color = mutedColor), 0, header.text.length)
+                                        if (header.hasAccent) {
+                                            addStyle(SpanStyle(color = accentColor), header.accentStart, header.accentEnd)
+                                        }
+                                    },
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                        } else {
+                            DateWithHolidayMark(displayDay) {
+                                Text(
+                                    parts.dateText,
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
                         }
-                        val accentColor = MaterialTheme.colorScheme.primary
-                        val mutedColor = MaterialTheme.colorScheme.onSurfaceVariant
-                        Text(
-                            text = buildAnnotatedString {
-                                append(header.text)
-                                addStyle(SpanStyle(color = mutedColor), 0, header.text.length)
-                                if (header.hasAccent) {
-                                    addStyle(SpanStyle(color = accentColor), header.accentStart, header.accentEnd)
-                                }
-                            },
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier.padding(vertical = 8.dp)
-                        )
-                    } else {
-                        Text(
-                            parts.dateText,
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier.padding(vertical = 8.dp)
-                        )
+                        LunarDateLabel(displayDay)
                     }
                 }
                 items(

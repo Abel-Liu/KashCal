@@ -65,6 +65,8 @@ import java.time.LocalDate
 import java.time.YearMonth
 import java.time.format.DateTimeFormatter
 import java.time.format.TextStyle
+import org.onekash.kashcal.ui.components.LunarDateLabel
+import org.onekash.kashcal.ui.components.DateWithHolidayMark
 
 /** Names where a day sits in an all-day event's shaded range. */
 enum class RangePart {
@@ -399,7 +401,7 @@ private fun SheetDays(
                             .clickable { onSelectDate(date) },
                         contentAlignment = Alignment.Center
                     ) {
-                        SheetDaySquare(dayNumber = dayNumber, look = look, weekendText = weekendText)
+                        SheetDaySquare(date = date, look = look, weekendText = weekendText)
                     }
                 }
             }
@@ -409,7 +411,7 @@ private fun SheetDays(
 
 /** Draws one day's rounded square and number for its [look]. */
 @Composable
-private fun SheetDaySquare(dayNumber: Int, look: SheetDayLook, weekendText: Boolean) {
+private fun SheetDaySquare(date: LocalDate, look: SheetDayLook, weekendText: Boolean) {
     val colors = MaterialTheme.colorScheme
     val fill = when (look) {
         SheetDayLook.SELECTED -> colors.inverseSurface
@@ -437,12 +439,17 @@ private fun SheetDaySquare(dayNumber: Int, look: SheetDayLook, weekendText: Bool
             .then(edge),
         contentAlignment = Alignment.Center
     ) {
-        Text(
-            text = dayNumber.toString(),
-            style = MaterialTheme.typography.bodyMedium,
-            color = textColor,
-            fontWeight = if (look == SheetDayLook.PLAIN || look == SheetDayLook.IN_RANGE) FontWeight.Normal
-            else FontWeight.Bold
-        )
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            DateWithHolidayMark(date) {
+                Text(
+                    text = date.dayOfMonth.toString(),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = textColor,
+                    fontWeight = if (look == SheetDayLook.PLAIN || look == SheetDayLook.IN_RANGE) FontWeight.Normal
+                    else FontWeight.Bold
+                )
+            }
+            LunarDateLabel(date, color = textColor)
+        }
     }
 }

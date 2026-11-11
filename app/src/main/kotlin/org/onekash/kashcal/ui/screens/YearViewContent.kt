@@ -58,6 +58,10 @@ import java.util.Calendar
 import java.util.Locale
 import kotlin.math.ceil
 import kotlin.math.floor
+import org.onekash.kashcal.ui.components.LocalShowChineseLunarDate
+import org.onekash.kashcal.ui.components.LunarDateLabel
+import androidx.compose.ui.text.TextStyle as ComposeTextStyle
+import org.onekash.kashcal.ui.components.DateWithHolidayMark
 
 private fun getLocalizedMonthNames(): List<String> {
     val locale = Locale.getDefault()
@@ -197,6 +201,7 @@ private val DAY_ROW_PADDING = 1.dp
 private val DOT_SIZE = 2.dp
 private val MIN_CELL = 8.dp
 private val MAX_CELL = 24.dp
+private val YEAR_LUNAR_LINE_HEIGHT = 10.dp
 /** Day number font size as a share of its cell: 8sp in a 14dp cell. */
 private const val DAY_NUMBER_SCALE = 8f / 14f
 
@@ -230,21 +235,25 @@ internal fun yearLayout(
     weekdayHeight: Dp,
     baseLabelHeight: Dp = labelHeight,
     baseWeekdayHeight: Dp = weekdayHeight,
+    showLunarDate: Boolean = false,
 ): YearLayout {
+    val columns = if (showLunarDate) intArrayOf(2, 3, 4, 6) else intArrayOf(3, 4, 6)
+    val minimumCellSize = if (showLunarDate) 20.dp else MIN_CELL
+    val lunarHeight = if (showLunarDate) YEAR_LUNAR_LINE_HEIGHT else 0.dp
     if (density.fontScale <= 1f) {
-        return fitYear(width, height, density, labelHeight, weekdayHeight, minCellPx = null)
+        return fitYear(width, height, density, labelHeight, weekdayHeight, columns, minimumCellSize, lunarHeight)
     }
     val normal = Density(density.density, 1f)
-    val base = fitYear(width, height, normal, baseLabelHeight, baseWeekdayHeight, minCellPx = null)
+    val base = fitYear(width, height, normal, baseLabelHeight, baseWeekdayHeight, columns, minimumCellSize, lunarHeight)
     // The cell back in whole pixels first, so an exact product (22px x 1.5) isn't rounded up.
     val basePx = with(normal) { base.cell.roundToPx() }
     val floorPx = ceil(basePx * density.fontScale - 0.001f).toInt()
-    return fitYear(width, height, density, labelHeight, weekdayHeight, minCellPx = floorPx)
+    return fitYear(width, height, density, labelHeight, weekdayHeight, columns, minimumCellSize, lunarHeight, floorPx)
 }
 
 /**
  * Lays out the year for [yearLayout] with the smallest cell [minCellPx], capped by the widest
- * cell the width allows; null is [MIN_CELL].
+ * cell the width allows; null uses [minimumCellSize].
  */
 private fun fitYear(
     width: Dp,
@@ -252,19 +261,26 @@ private fun fitYear(
     density: Density,
     labelHeight: Dp,
     weekdayHeight: Dp,
-    minCellPx: Int?,
+    columnOptions: IntArray,
+    minimumCellSize: Dp,
+    lunarHeight: Dp,
+    minCellPx: Int? = null,
 ): YearLayout = with(density) {
-    val dayRowExtra = DAY_ROW_PADDING.roundToPx() * 2 + DOT_SIZE.roundToPx()
+    val dayRowExtra = DAY_ROW_PADDING.roundToPx() * 2 + DOT_SIZE.roundToPx() + lunarHeight.roundToPx()
     val monthOverhead = MONTH_PADDING.roundToPx() * 2 + labelHeight.roundToPx() +
         LABEL_GAP.roundToPx() + weekdayHeight.roundToPx()
-    val cellByWidth = intArrayOf(3, 4, 6).associateWith { columns ->
+    val cellByWidth = columnOptions.associateWith { columns ->
         val monthWidth = (width.toPx() - PAGE_PADDING.roundToPx() * 2 -
             COLUMN_GAP.roundToPx() * (columns - 1)) / columns
         floor((monthWidth - MONTH_PADDING.roundToPx() * 2) / 7).toInt()
     }
-    val minCell = if (minCellPx == null) MIN_CELL.roundToPx() else {
-        maxOf(MIN_CELL.roundToPx(), minOf(minCellPx, cellByWidth.values.max()))
+    val widestCell = cellByWidth.values.max()
+    val floor = if (lunarHeight > 0.dp) {
+        minimumCellSize.roundToPx().coerceAtMost(widestCell).coerceAtLeast(MIN_CELL.roundToPx())
+    } else {
+        minimumCellSize.roundToPx()
     }
+    val minCell = maxOf(floor, minOf(minCellPx ?: floor, widestCell))
     val maxCell = maxOf(MAX_CELL.roundToPx(), minCell)
     val fitted = cellByWidth.map { (columns, byWidth) ->
         val rows = 12 / columns
@@ -274,7 +290,7 @@ private fun fitYear(
     }.maxBy { it.second }
     if (fitted.second >= minCell) {
         YearLayout(columns = fitted.first, cell = fitted.second.toDp(), scrolls = false)
-    } else if (minCellPx != null) {
+    } else if (minCellPx != null && widestCell >= minCell) {
         // A larger font: the most columns whose cells reach the smallest cell, at that size.
         val columns = cellByWidth.filter { it.value >= minCell }.keys.max()
         YearLayout(columns = columns, cell = minCell.toDp(), scrolls = true)
@@ -317,8 +333,9 @@ private fun YearPage(
         val baseWeekdayHeight = with(density) {
             textMeasurer.measure("Ag", weekdayStyle, maxLines = 1, density = normalDensity).size.height.toDp()
         } + WEEKDAY_PADDING * 2
-        val layout = remember(maxWidth, maxHeight, density, labelHeight, weekdayHeight, baseLabelHeight, baseWeekdayHeight) {
-            yearLayout(maxWidth, maxHeight, density, labelHeight, weekdayHeight, baseLabelHeight, baseWeekdayHeight)
+        val showLunarDate = LocalShowChineseLunarDate.current
+        val layout = remember(maxWidth, maxHeight, density, labelHeight, weekdayHeight, baseLabelHeight, baseWeekdayHeight, showLunarDate) {
+            yearLayout(maxWidth, maxHeight, density, labelHeight, weekdayHeight, baseLabelHeight, baseWeekdayHeight, showLunarDate)
         }
         Column(
             modifier = Modifier
@@ -433,6 +450,7 @@ private fun MiniMonth(
             Row(modifier = Modifier.fillMaxWidth()) {
                 row.forEach { cell ->
                     MiniDayCell(
+                        dayCode = MonthGrid.computeDayCodeForCell(cell, year, month),
                         cell = cell,
                         isToday = cell.position == MonthGrid.DayPosition.MonthDate &&
                             cell.dayOfMonth == todayDay &&
@@ -455,6 +473,7 @@ private fun MiniMonth(
  */
 @Composable
 private fun MiniDayCell(
+    dayCode: Int,
     cell: MonthGrid.DayCell,
     isToday: Boolean,
     dotColor: Int?,
@@ -480,18 +499,36 @@ private fun MiniDayCell(
                 Modifier.size(size)
             }
         ) {
-            Text(
-                text = cell.dayOfMonth.toString(),
-                fontSize = fontSize,
-                lineHeight = fontSize,
-                maxLines = 1,
-                textAlign = TextAlign.Center,
-                color = when {
-                    isToday -> MaterialTheme.colorScheme.onPrimaryContainer
-                    cell.position == MonthGrid.DayPosition.MonthDate ->
-                        MaterialTheme.colorScheme.onSurface
-                    else -> MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f)
-                }
+            DateWithHolidayMark(dayCode, markSize = fontSize * 0.55f, compact = true) {
+                Text(
+                    text = cell.dayOfMonth.toString(),
+                    fontSize = fontSize,
+                    lineHeight = fontSize,
+                    maxLines = 1,
+                    textAlign = TextAlign.Center,
+                    color = when {
+                        isToday -> MaterialTheme.colorScheme.onPrimaryContainer
+                        cell.position == MonthGrid.DayPosition.MonthDate ->
+                            MaterialTheme.colorScheme.onSurface
+                        else -> MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f)
+                    }
+                )
+            }
+        }
+
+        if (LocalShowChineseLunarDate.current) {
+            val (lunarFontSize, lineHeight) = with(LocalDensity.current) {
+                (size * 0.31f).toSp() to YEAR_LUNAR_LINE_HEIGHT.toSp()
+            }
+            LunarDateLabel(
+                dayCode,
+                modifier = Modifier.height(YEAR_LUNAR_LINE_HEIGHT),
+                color = if (cell.position == MonthGrid.DayPosition.MonthDate) {
+                    MaterialTheme.colorScheme.onSurfaceVariant
+                } else {
+                    MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
+                },
+                style = ComposeTextStyle(fontSize = lunarFontSize, lineHeight = lineHeight),
             )
         }
 

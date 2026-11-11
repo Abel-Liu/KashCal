@@ -20,6 +20,7 @@ object ExportablePreferences {
 
     private val KIND_BY_KEY: Map<String, PrefKind> = mapOf(
         PreferencesKeys.FIRST_DAY_OF_WEEK.name to PrefKind.INT,
+        PreferencesKeys.SHOW_CHINESE_LUNAR_DATE.name to PrefKind.BOOL,
         PreferencesKeys.SHOW_WEEK_NUMBERS.name to PrefKind.BOOL,
         PreferencesKeys.AGENDA_WEEK_BAR_EXPANDED.name to PrefKind.BOOL,
         PreferencesKeys.DAY_WEEK_BAR_EXPANDED.name to PrefKind.BOOL,
@@ -67,6 +68,7 @@ object ExportablePreferences {
     val KEYS: List<Preferences.Key<*>> = listOf(
         // Calendar view
         PreferencesKeys.FIRST_DAY_OF_WEEK,
+        PreferencesKeys.SHOW_CHINESE_LUNAR_DATE,
         PreferencesKeys.SHOW_WEEK_NUMBERS,
         // Agenda week bar expanded/collapsed: a persistent display choice, so it's exported.
         PreferencesKeys.AGENDA_WEEK_BAR_EXPANDED,

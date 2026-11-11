@@ -75,6 +75,10 @@ import org.onekash.kashcal.ui.util.DayPagerUtils
 import org.onekash.kashcal.ui.util.SelectedDay
 import org.onekash.kashcal.util.DateTimeUtils
 import java.util.Calendar as JavaCalendar
+import org.onekash.kashcal.ui.components.LocalShowChineseLunarDate
+import org.onekash.kashcal.ui.components.LunarDateLabel
+import org.onekash.kashcal.ui.components.lunarDateStyle
+import org.onekash.kashcal.ui.components.DateWithHolidayMark
 
 /**
  * Draws one month of the full-height month view: the weekday header over [FullHeightMonthGrid],
@@ -241,7 +245,11 @@ private fun WeekRow(
             val density = LocalDensity.current
             val typography = MaterialTheme.typography
             // Whole pixels, so the counted rows never add up to more than the row's height.
-            val stripPx = with(density) { (typography.labelMedium.lineHeight.toDp() + STRIP_PADDING * 2).roundToPx() }
+            val showLunarDate = LocalShowChineseLunarDate.current
+            val stripPx = with(density) {
+                val datePx = (typography.labelMedium.lineHeight.toDp() + STRIP_PADDING * 2).roundToPx()
+                datePx + if (showLunarDate) lunarDateStyle.lineHeight.toDp().roundToPx() else 0
+            }
             val slotPx = with(density) { (typography.labelSmall.lineHeight.toDp() + SLOT_PADDING * 2).roundToPx() }
             val gapPx = with(density) { SLOT_GAP.roundToPx() }
             val rows = rowPx?.let { monthFullFittedRows(it, stripPx, slotPx, gapPx) } ?: UNBOUNDED_ROWS
@@ -286,6 +294,7 @@ private fun WeekRow(
                         row.forEachIndexed { col, cell ->
                             DayHeaderCell(
                                 cell = cell,
+                                dayCode = weekDayCodes[col],
                                 isToday = isToday(col),
                                 isSelected = isSelected(col),
                                 isInOutDate = !isInMonth(col),
@@ -549,6 +558,7 @@ private fun rememberDisplayEventTitle(displayEvent: DisplayEvent, showEventEmoji
 
 @Composable
 private fun DayHeaderCell(
+    dayCode: Int,
     cell: MonthGrid.DayCell,
     isToday: Boolean,
     isSelected: Boolean,
@@ -583,16 +593,22 @@ private fun DayHeaderCell(
             ),
         contentAlignment = Alignment.Center,
     ) {
-        Text(
-            text = cell.dayOfMonth.toString(),
-            style = MaterialTheme.typography.labelMedium,
-            color = numberColor,
-            maxLines = 1,
-            softWrap = false,
-            modifier = Modifier
-                .alpha(monthDateNumberAlpha(isPastDay = isPastDay, isSelected = isSelected))
-                .semantics { hideFromAccessibility() },
-        )
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.alpha(monthDateNumberAlpha(isPastDay = isPastDay, isSelected = isSelected)),
+        ) {
+            DateWithHolidayMark(dayCode) {
+                Text(
+                    text = cell.dayOfMonth.toString(),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = numberColor,
+                    maxLines = 1,
+                    softWrap = false,
+                    modifier = Modifier.semantics { hideFromAccessibility() },
+                )
+            }
+            LunarDateLabel(dayCode, color = numberColor)
+        }
     }
 }
 

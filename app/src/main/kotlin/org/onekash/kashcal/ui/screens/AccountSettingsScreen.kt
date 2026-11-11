@@ -282,6 +282,8 @@ fun AccountSettingsScreen(
     onTimeFormatChange: (String) -> Unit = {},
     firstDayOfWeek: Int = java.util.Calendar.SUNDAY,
     onFirstDayOfWeekChange: (Int) -> Unit = {},
+    showChineseLunarDate: Boolean = false,
+    onShowChineseLunarDateChange: (Boolean) -> Unit = {},
     showWeekNumbers: Boolean = false,
     onShowWeekNumbersChange: (Boolean) -> Unit = {},
     showMultiDayTimedInAllDayStrip: Boolean = PreferencesKeys.DEFAULT_SHOW_MULTIDAY_TIMED_IN_ALLDAY_STRIP,
@@ -597,6 +599,17 @@ fun AccountSettingsScreen(
                                 checked = widgetDetailedRows,
                                 onCheckedChange = onWidgetDetailedRowsChange,
                                 info = detailedRowsInfo,
+                                showDivider = false,
+                                searchQuery = searchQuery
+                            )
+                        }
+
+                        row(label = stringResource(R.string.settings_show_chinese_lunar_date), id = "chinese-lunar-date") {
+                            SettingsToggleRow(
+                                icon = Icons.Default.DateRange,
+                                label = stringResource(R.string.settings_show_chinese_lunar_date),
+                                checked = showChineseLunarDate,
+                                onCheckedChange = onShowChineseLunarDateChange,
                                 showDivider = false,
                                 searchQuery = searchQuery
                             )

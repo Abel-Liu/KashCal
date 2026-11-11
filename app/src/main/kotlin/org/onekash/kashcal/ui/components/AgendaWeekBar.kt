@@ -121,7 +121,7 @@ private fun DateCell(
     )
     val goToDateLabel = stringResource(R.string.label_go_to_date)
 
-    Box(modifier = modifier, contentAlignment = Alignment.Center) {
+    Column(modifier = modifier, horizontalAlignment = Alignment.CenterHorizontally) {
         WeekStripDayCircle(
             date = date,
             style = style,
@@ -132,6 +132,7 @@ private fun DateCell(
                     selected = isSelected
                 },
         )
+        LunarDateLabel(date)
     }
 }
 
@@ -198,13 +199,15 @@ internal fun WeekStripDayCircle(
             .then(actions),
         contentAlignment = Alignment.Center
     ) {
-        Text(
-            text = date.dayOfMonth.toString(),
-            style = MaterialTheme.typography.bodyMedium,
-            fontWeight = if (style != DayCellStyle.PLAIN) FontWeight.Bold else FontWeight.Normal,
-            color = numberColor,
-            textAlign = TextAlign.Center
-        )
+        DateWithHolidayMark(date) {
+            Text(
+                text = date.dayOfMonth.toString(),
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = if (style != DayCellStyle.PLAIN) FontWeight.Bold else FontWeight.Normal,
+                color = numberColor,
+                textAlign = TextAlign.Center
+            )
+        }
     }
 }
 

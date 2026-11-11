@@ -484,6 +484,8 @@ class AccountSettingsViewModel @Inject constructor(
     private val _firstDayOfWeek = MutableStateFlow(java.util.Calendar.SUNDAY)
     val firstDayOfWeek: StateFlow<Int> = _firstDayOfWeek.asStateFlow()
 
+    val showChineseLunarDate = dataStore.showChineseLunarDate
+
     private val _showWeekNumbers = MutableStateFlow(false)
     val showWeekNumbers: StateFlow<Boolean> = _showWeekNumbers.asStateFlow()
 
@@ -1097,6 +1099,12 @@ class AccountSettingsViewModel @Inject constructor(
             // The month widget lays out its columns from this preference, so refresh the widgets
             // now instead of waiting for the next periodic update.
             widgetUpdateManager.updateAllWidgets("first_day_of_week_changed")
+        }
+    }
+
+    fun setShowChineseLunarDate(show: Boolean) {
+        viewModelScope.launch {
+            dataStore.setShowChineseLunarDate(show)
         }
     }
 

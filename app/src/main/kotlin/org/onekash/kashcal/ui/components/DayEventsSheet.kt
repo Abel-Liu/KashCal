@@ -38,6 +38,7 @@ import org.onekash.kashcal.domain.model.DisplayEvent
 import org.onekash.kashcal.util.DateTimeUtils
 import java.text.SimpleDateFormat
 import java.util.Date
+import org.onekash.kashcal.ui.util.DayPagerUtils
 
 /**
  * Shows a bottom sheet of every event on a day tapped in the full-height month view (in place
@@ -77,14 +78,17 @@ internal fun DayEventsSheet(
                 // Announce the sheet (by its date) when it opens.
                 .semantics { paneTitle = dateLabel }
         ) {
-            Text(
-                text = dateLabel,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier
-                    .padding(bottom = 12.dp)
-                    .semantics { heading() }
-            )
+            Column(modifier = Modifier.padding(bottom = 12.dp)) {
+                DateWithHolidayMark(DayPagerUtils.msToDayCode(dateMs)) {
+                    Text(
+                        text = dateLabel,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.semantics { heading() }
+                    )
+                }
+                LunarDateLabel(DayPagerUtils.msToDayCode(dateMs))
+            }
 
             if (events.isEmpty()) {
                 Box(

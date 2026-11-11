@@ -1396,6 +1396,11 @@ class HomeViewModel(
             }
         }
         viewModelScope.launch {
+            dataStore.showChineseLunarDate.collect { show ->
+                _uiState.update { it.copy(showChineseLunarDate = show) }
+            }
+        }
+        viewModelScope.launch {
             dataStore.showWeekNumbers.collect { show ->
                 _uiState.update { it.copy(showWeekNumbers = show) }
             }

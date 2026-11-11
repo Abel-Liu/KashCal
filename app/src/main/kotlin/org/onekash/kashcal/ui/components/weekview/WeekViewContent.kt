@@ -129,6 +129,8 @@ import java.time.format.DateTimeFormatter
 import java.util.Locale
 import kotlin.math.abs
 import org.onekash.kashcal.ui.util.LocalDisplayZone
+import org.onekash.kashcal.ui.components.LunarDateLabel
+import org.onekash.kashcal.ui.components.DateWithHolidayMark
 
 private const val TAG = "WeekViewContent"
 
@@ -1061,6 +1063,7 @@ private fun DayHeaderCell(
                 date = date,
                 style = dayCellStyle(isToday = isToday, isSelected = isToday),
             )
+            LunarDateLabel(date)
         }
     } else {
         // 3-day view: "Wed 11" on one line.
@@ -1083,28 +1086,33 @@ private fun DayHeaderCell(
                 textAlign = TextAlign.Center
             )
 
-            Box(
-                modifier = Modifier
-                    .padding(start = 4.dp)
-                    .then(
-                        if (isToday) {
-                            Modifier
-                                .clip(CircleShape)
-                                .background(MaterialTheme.colorScheme.inverseSurface)
-                                .padding(horizontal = 6.dp, vertical = 2.dp)
-                        } else {
-                            Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                        }
-                    ),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = dayNumber,
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = if (isToday) FontWeight.Bold else FontWeight.Normal,
-                    color = if (isToday) MaterialTheme.colorScheme.inverseOnSurface else textColor,
-                    textAlign = TextAlign.Center
-                )
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Box(
+                    modifier = Modifier
+                        .padding(start = 4.dp)
+                        .then(
+                            if (isToday) {
+                                Modifier
+                                    .clip(CircleShape)
+                                    .background(MaterialTheme.colorScheme.inverseSurface)
+                                    .padding(horizontal = 6.dp, vertical = 2.dp)
+                            } else {
+                                Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                            }
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    DateWithHolidayMark(date) {
+                        Text(
+                            text = dayNumber,
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = if (isToday) FontWeight.Bold else FontWeight.Normal,
+                            color = if (isToday) MaterialTheme.colorScheme.inverseOnSurface else textColor,
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                }
+                LunarDateLabel(date, modifier = Modifier.padding(start = 4.dp))
             }
         }
     }
