@@ -4,6 +4,16 @@ Copyright 2025 onekash labs
 This product includes software developed by third parties.
 
 ================================================================================
+Gregorian-Lunar Calendar Conversion Table
+================================================================================
+
+Chinese lunar month start dates are derived from data published by the Hong Kong
+Observatory, Government of the Hong Kong Special Administrative Region. The
+source table is credited to the Hong Kong Observatory and the Government.
+
+https://www.hko.gov.hk/sc/gts/time/conversion1_text.htm
+
+================================================================================
 ical4j - iCalendar Parser (BSD-3-Clause)
 ================================================================================
 
