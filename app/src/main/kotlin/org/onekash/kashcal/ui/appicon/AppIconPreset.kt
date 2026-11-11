@@ -4,6 +4,7 @@ import android.content.ComponentName
 import android.content.Context
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
+import org.onekash.kashcal.MainActivity
 import org.onekash.kashcal.R
 import java.time.LocalDate
 
@@ -21,7 +22,7 @@ import java.time.LocalDate
  * showing that day's number ([DayIcons]) and labeled "Calendar"; which one it enables depends on
  * the date.
  *
- * @property fixedAliasSuffix the alias class name relative to the application package, or null
+ * @property fixedAliasSuffix the alias class name relative to the launcher activity namespace, or null
  *   for [TODAYS_DATE], whose alias comes from [LauncherAliases.daySuffix].
  * @property fixedPreviewRes the adaptive icon's foreground layer, or null for [TODAYS_DATE], whose
  *   preview is today's ([previewForegroundFor]).
@@ -58,7 +59,7 @@ enum class AppIconPreset(
         labelRes = R.string.app_icon_todays_date,
     );
 
-    /** Returns the alias this preset enables on [today], relative to the application package. */
+    /** Returns the alias this preset enables on [today], relative to the launcher activity namespace. */
     fun aliasSuffixFor(today: LocalDate): String =
         fixedAliasSuffix ?: LauncherAliases.daySuffix(today.dayOfMonth)
 
@@ -85,7 +86,7 @@ enum class AppIconPreset(
 }
 
 /**
- * Every launcher alias in the manifest, relative to the application package: the static
+ * Every launcher alias in the manifest, relative to the launcher activity namespace: the static
  * presets' aliases and `.MainActivityDay1` to `.MainActivityDay31`. `LauncherAliasManifestTest`
  * checks the manifest against this list.
  */
@@ -101,10 +102,10 @@ object LauncherAliases {
 
     val ALL: List<String> = AppIconPreset.entries.mapNotNull { it.fixedAliasSuffix } + DAYS
 
-    /** Returns the component for [suffix], resolved against the application package. */
+    /** Returns the component for [suffix], using the installed package and launcher activity namespace. */
     fun componentName(context: Context, suffix: String): ComponentName {
         val appContext = context.applicationContext
-        return ComponentName(appContext, appContext.packageName + suffix)
+        return ComponentName(appContext, MainActivity::class.java.packageName + suffix)
     }
 }
 

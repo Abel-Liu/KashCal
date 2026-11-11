@@ -35,8 +35,11 @@ val localProps = Properties().apply {
     }
 }
 
+val kashCalApplicationId = "org.onekash.kashcal"
+val debugApplicationIdSuffix = ".debug"
+
 android {
-    namespace = "org.onekash.kashcal"
+    namespace = kashCalApplicationId
     compileSdk = 37
 
     // Leave out the encrypted dependency metadata, which only Google can read.
@@ -47,7 +50,9 @@ android {
     }
 
     defaultConfig {
-        applicationId = "org.onekash.kashcal"
+        applicationId = kashCalApplicationId
+        resValue("string", "kashcal_application_id", kashCalApplicationId)
+        resValue("string", "kashcal_contacts_account_type", "$kashCalApplicationId.contacts")
         minSdk = 31
         targetSdk = 37
         versionCode = versionProps.getProperty("VERSION_CODE").toInt()
@@ -113,6 +118,10 @@ android {
             )
         }
         debug {
+            applicationIdSuffix = debugApplicationIdSuffix
+            val debugApplicationId = kashCalApplicationId + debugApplicationIdSuffix
+            resValue("string", "kashcal_application_id", debugApplicationId)
+            resValue("string", "kashcal_contacts_account_type", "$debugApplicationId.contacts")
             isMinifyEnabled = false
             isShrinkResources = false
         }
@@ -137,6 +146,7 @@ android {
     buildFeatures {
         compose = true
         buildConfig = true
+        resValues = true
     }
 
     androidResources {
