@@ -48,8 +48,8 @@ import java.util.TimeZone
 
 /**
  * Compose tests for [DateTimeSheet] on a 411x914dp phone: it opens at full height on the side
- * the user tapped, the Starts | Ends switch edits both ends in one sheet, only the strip with
- * the handle and switch drags the sheet, and every way of closing it hands the edited start and
+ * the user tapped, the Starts | Ends switch edits both ends in one sheet, only the handle
+ * drags the sheet, and every way of closing it hands the edited start and
  * end back once. Run the class alone: Robolectric runs of more than one class hit a native
  * crash.
  */
@@ -116,6 +116,9 @@ class DateTimeSheetTest {
     private fun starts() = rule.onNodeWithText("Starts", substring = true)
     private fun ends() = rule.onNodeWithText("Ends", substring = true)
     private fun hourWheel() = rule.onAllNodesWithContentDescription("Wheel picker with 12 options")[0]
+    private fun handle() = rule.onNode(SemanticsMatcher("sheet handle can dismiss") {
+        it.config.getOrNull(SemanticsActions.Dismiss)?.label == "Close"
+    })
 
     private fun swipeDownFrom(node: androidx.compose.ui.test.SemanticsNodeInteraction) {
         node.performTouchInput { swipeDown(startY = centerY, endY = centerY + 700f, durationMillis = 200) }
@@ -128,7 +131,18 @@ class DateTimeSheetTest {
     fun `the sheet opens at full height`() {
         render()
 
-        assertTrue("switch at ${rule.topFraction(starts())}", rule.topFraction(starts()) < 0.1f)
+        assertTrue("handle at ${rule.topFraction(handle())}", rule.topFraction(handle()) < 0.1f)
+    }
+
+    @Test
+    fun `the switch sits below the calendar and above the wheel`() {
+        render()
+
+        val day = rule.onNodeWithText("15").getUnclippedBoundsInRoot()
+        val switch = starts().getUnclippedBoundsInRoot()
+        val wheel = hourWheel().getUnclippedBoundsInRoot()
+        assertTrue(day.bottom <= switch.top)
+        assertTrue(switch.bottom <= wheel.top)
     }
 
     @Test
@@ -233,16 +247,26 @@ class DateTimeSheetTest {
     // ---- drags: only the top strip moves the sheet ----
 
     @Test
-    fun `a drag down from the switch strip closes the sheet and keeps the times`() {
+    fun `a drag down from the handle closes the sheet and keeps the times`() {
         val host = render()
         rule.onNodeWithText("29").performClick()
         rule.waitForIdle()
 
-        swipeDownFrom(starts())
+        swipeDownFrom(handle())
 
         assertEquals(1, host.commits)
         assertEquals(midnight(LocalDate.of(2026, 10, 29)), host.last!!.dateMillis)
         assertEquals(9, host.last!!.startHour)
+    }
+
+    @Test
+    fun `a drag down on the switch leaves the sheet open`() {
+        val host = render()
+
+        swipeDownFrom(starts())
+
+        assertEquals(0, host.commits)
+        starts().assertExists()
     }
 
     @Test
@@ -360,9 +384,9 @@ class DateTimeSheetTest {
     }
 
     @Test
-    fun `the content is centered between the switch and Done`() {
+    fun `the content is centered between the handle and Done`() {
         render()
-        val stripBottom = starts().getUnclippedBoundsInRoot().bottom
+        val stripBottom = handle().getUnclippedBoundsInRoot().bottom
         // The arrow button is drawn 40dp tall, centered in the 48dp month header.
         val headerTop = rule.onNodeWithContentDescription("Previous month").getUnclippedBoundsInRoot()
             .let { (it.top + it.bottom) / 2 } - 24.dp

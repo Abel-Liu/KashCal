@@ -299,7 +299,8 @@ fun DateTimeDisplayRow(
                     focusManager.clearFocus()
                     onStartClick()
                 }
-                .padding(start = 52.dp, end = 16.dp, top = 14.dp, bottom = 14.dp),
+                .heightIn(min = 48.dp)
+                .padding(start = 52.dp, end = 16.dp, top = 10.dp, bottom = 10.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             val startDisplay = buildString {
@@ -337,7 +338,8 @@ fun DateTimeDisplayRow(
                     focusManager.clearFocus()
                     onEndClick()
                 }
-                .padding(start = 52.dp, end = 16.dp, top = 14.dp, bottom = 14.dp),
+                .heightIn(min = 48.dp)
+                .padding(start = 52.dp, end = 16.dp, top = 10.dp, bottom = 10.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             val endDisplay = buildString {
@@ -371,11 +373,10 @@ fun DateTimeDisplayRow(
 }
 
 /**
- * Shows the event's start and end in one full-height sheet: a Starts | Ends switch at the top,
- * then the month grid and, for a timed event, the time wheel, with length chips when there is
- * room. The edits apply the form's date rules as they happen ([DateTimeSheetState]).
+ * Shows the event's start and end in one full-height sheet. The Starts | Ends switch sits
+ * below the month grid and above the time wheel or all-day controls. The edits apply the form's date rules as they happen ([DateTimeSheetState]).
  *
- * Only the strip with the handle and the switch drags the sheet; the grid, wheel and chips keep
+ * Only the handle strip drags the sheet; the grid, wheel and chips keep
  * their vertical drags, so a slipped month swipe or wheel flick can't close it. Swiping it
  * closed, Back and Done all hand the edited start and end to [onCommit] once; the form's own
  * Cancel is what discards them. Done first closes an open month/year wheel.
@@ -422,12 +423,7 @@ internal fun DateTimeSheet(
         contentWindowInsets = { WindowInsets.safeDrawing.only(WindowInsetsSides.Top) },
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
-            SheetTopStrip(
-                sheet = sheet,
-                timePattern = timePattern,
-                onFlip = { side -> update { it.flip(side) } },
-                onClose = commit,
-            )
+            SheetDragHandle(onClose = commit)
 
             BoxWithConstraints(
                 modifier = Modifier
@@ -436,8 +432,10 @@ internal fun DateTimeSheet(
             ) {
                 val middleHeight = maxHeight
                 val density = LocalDensity.current
+                val switchHeight = density.sheetSwitchHalfHeight(MaterialTheme.typography.labelLarge.lineHeight) +
+                    SHEET_SWITCH_VERTICAL_PADDING * 2
                 val layout = dateTimeSheetLayout(
-                    middleHeight = middleHeight.value,
+                    middleHeight = (middleHeight - switchHeight).value.coerceAtLeast(0f),
                     minRowHeight = density.sheetWheelRowMinHeight().value,
                     hintLineHeight = density.sheetHintLineHeight().value,
                     isAllDay = sheet.isAllDay,
@@ -470,6 +468,14 @@ internal fun DateTimeSheet(
                             onShowMonthYearPickerChange = { showMonthYearPicker = it },
                             onSelectDate = { date -> update { it.selectDate(it.side, date) } },
                             onMonth = { month -> update { it.setDisplayedMonth(month) } },
+                        )
+                        SheetSwitch(
+                            side = sheet.side,
+                            startLabel = stringResource(R.string.label_starts),
+                            startValue = sideValue(sheet, DateSelectionMode.START, timePattern),
+                            endLabel = stringResource(R.string.label_ends),
+                            endValue = sideValue(sheet, DateSelectionMode.END, timePattern),
+                            onFlip = { side -> update { it.flip(side) } },
                         )
                         if (!sheet.isAllDay) {
                             HorizontalDivider(
@@ -552,58 +558,31 @@ private object KeepDragsFromSheet : NestedScrollConnection {
     override suspend fun onPostFling(consumed: Velocity, available: Velocity): Velocity = available
 }
 
-/**
- * Shows the drag handle and the Starts | Ends switch. Each half is drawn [sheetSwitchHalfHeight]
- * tall and takes taps 16dp higher, into the handle strip, so it is at least a 56dp target; a drag
- * that starts there still moves the sheet. TalkBack users close the sheet with the strip's close
- * action.
- */
+/** Keeps the sheet's drag and accessibility dismissal actions above the calendar. */
 @Composable
-private fun SheetTopStrip(
-    sheet: DateTimeSheetState,
-    timePattern: String,
-    onFlip: (DateSelectionMode) -> Unit,
-    onClose: () -> Unit,
-) {
+private fun SheetDragHandle(onClose: () -> Unit) {
     val closeLabel = stringResource(R.string.action_close)
-    val startLabel = stringResource(R.string.label_starts)
-    val endLabel = stringResource(R.string.label_ends)
-    val startValue = sideValue(sheet, DateSelectionMode.START, timePattern)
-    val endValue = sideValue(sheet, DateSelectionMode.END, timePattern)
     Box(
         modifier = Modifier
             .fillMaxWidth()
+            .height(24.dp)
             .semantics {
                 dismiss(label = closeLabel) {
                     onClose()
                     true
                 }
-            }
+            },
+        contentAlignment = Alignment.Center,
     ) {
         Box(
             modifier = Modifier
-                .fillMaxWidth()
-                .height(20.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(width = 32.dp, height = 4.dp)
-                    .background(MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f), RoundedCornerShape(2.dp))
-            )
-        }
-        Box(modifier = Modifier.fillMaxWidth().padding(top = 4.dp)) {
-            SheetSwitch(
-                side = sheet.side,
-                startLabel = startLabel,
-                startValue = startValue,
-                endLabel = endLabel,
-                endValue = endValue,
-                onFlip = onFlip,
-            )
-        }
+                .size(width = 32.dp, height = 4.dp)
+                .background(MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f), RoundedCornerShape(2.dp))
+        )
     }
 }
+
+private val SHEET_SWITCH_VERTICAL_PADDING = 4.dp
 
 /**
  * Draws the two halves of the Starts | Ends switch the same way, each on one line: the label in
@@ -643,7 +622,7 @@ internal fun SheetSwitch(
                 modifier = Modifier
                     .weight(1f)
                     .selectable(selected = selected, role = Role.Tab, onClick = { onFlip(half) })
-                    .padding(top = 16.dp)
+                    .padding(vertical = SHEET_SWITCH_VERTICAL_PADDING)
             ) {
                 Row(
                     modifier = Modifier
@@ -685,8 +664,7 @@ internal fun SheetSwitch(
 
 /**
  * Returns a switch half's drawn height: the value's one line plus 8dp, never under 40dp. It
- * follows the font setting only, not the text, so the strip keeps its height and the grid below it
- * doesn't move while editing (a date added when the end moves to another day).
+ * follows the font setting so the layout stays steady when a date is added to the value.
  */
 internal fun Density.sheetSwitchHalfHeight(valueLineHeight: TextUnit): Dp =
     maxOf(40.dp, valueLineHeight.toDp() + 8.dp)

@@ -175,6 +175,29 @@ class EventFormLayoutOrderTest {
     }
 
     @Test
+    fun `editing an existing event hides the tag row`() {
+        composeTestRule.setContent {
+            MaterialTheme {
+                EventFormContent(
+                    modifier = Modifier.fillMaxSize(),
+                    onSavingChange = {},
+                    eventId = sampleEvent.id,
+                    onLoadEvent = { sampleEvent.copy(categories = listOf("Personal")) },
+                    calendars = calendars,
+                    calendarGroups = emptyList(),
+                    defaultCalendar = DefaultCalendar.Room(1L),
+                    onDismiss = {},
+                    onSave = { Result.success(sampleEvent) },
+                )
+            }
+        }
+        composeTestRule.waitForIdle()
+
+        composeTestRule.onNodeWithText(sampleEvent.title).assertIsDisplayed()
+        composeTestRule.onNodeWithContentDescription("Tags", useUnmergedTree = true).assertDoesNotExist()
+    }
+
+    @Test
     fun `device-calendar create mode shows the tag row`() {
         // A writable device calendar carries tags like a Room calendar: the form
         // shows the tag row and accepts inline "#tag" entry. Tags are stored in

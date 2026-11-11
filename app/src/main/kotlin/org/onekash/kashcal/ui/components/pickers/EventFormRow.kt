@@ -74,7 +74,7 @@ fun EventFormRow(
                         Modifier.clickable { onToggle() }
                     else Modifier
                 )
-                .padding(horizontal = 16.dp, vertical = 14.dp),
+                .padding(horizontal = 16.dp, vertical = 12.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalAlignment = verticalAlignment
         ) {

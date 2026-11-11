@@ -195,7 +195,7 @@ internal fun shouldDismissKeyboardOnScroll(
  * Space above and below the section dividers, so it doesn't depend on which row
  * (EventFormRow at 14dp, picker rows at 8-12dp) sits against them.
  */
-private val SECTION_DIVIDER_SPACING = 6.dp
+private val SECTION_DIVIDER_SPACING = 4.dp
 
 /**
  * Whether the title-suggestion dropdown should appear: at least [MIN_TITLE_PREFIX]
@@ -1961,7 +1961,7 @@ fun EventFormContent(
                     // clip-prone disabled field with autocomplete chrome.
                     Text(
                         text = state.title,
-                        style = MaterialTheme.typography.headlineSmall,
+                        style = MaterialTheme.typography.titleLarge,
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(horizontal = 16.dp, vertical = 8.dp),
@@ -2002,7 +2002,7 @@ fun EventFormContent(
                                 }
                             }
                         },
-                        placeholder = { Text(stringResource(R.string.label_event_title), style = MaterialTheme.typography.headlineSmall) },
+                        placeholder = { Text(stringResource(R.string.label_event_title), style = MaterialTheme.typography.titleLarge) },
                         modifier = fieldGestureMarker
                             .fillMaxWidth()
                             .testTag(TAG_TITLE_FIELD)
@@ -2018,7 +2018,7 @@ fun EventFormContent(
                         // length cap.
                         maxLines = 4,
                         enabled = !isReadOnly,
-                        textStyle = MaterialTheme.typography.headlineSmall,
+                        textStyle = MaterialTheme.typography.titleLarge,
                         keyboardOptions = KeyboardOptions(
                             capitalization = KeyboardCapitalization.Sentences
                         ),
@@ -2458,7 +2458,8 @@ fun EventFormContent(
                     }
                 }
 
-                if (!isReadOnly && tagsAboveNotes) {
+                val showTagRow = !isReadOnly && !state.isEditMode
+                if (showTagRow && tagsAboveNotes) {
                     tagsRow()
                 }
 
@@ -2499,7 +2500,7 @@ fun EventFormContent(
 
                 // Default position: below notes, keeping notes and tags together
                 // above attendees and free/busy.
-                if (!isReadOnly && !tagsAboveNotes) {
+                if (showTagRow && !tagsAboveNotes) {
                     tagsRow()
                 }
 
@@ -2859,7 +2860,7 @@ fun EventFormContent(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(32.dp))
+                Spacer(modifier = Modifier.height(24.dp))
             }
             }
 
@@ -2869,7 +2870,7 @@ fun EventFormContent(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
                 horizontalArrangement = Arrangement.Center
             ) {
                 val stickyPrimary = MaterialTheme.colorScheme.primary

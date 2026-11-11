@@ -17,7 +17,7 @@ private const val DIVIDER_MIN_DP = 1f
 private const val WHEEL_ROW_MIN_DP = 32f
 
 /**
- * Sizes the middle of the date and time sheet, between the Starts | Ends switch and the Done bar.
+ * Sizes the calendar, wheel and related controls, with the Starts | Ends switch budgeted separately.
  * All values are in dp.
  *
  * @property wheelRows rows the time wheel shows: 5 or 3, and 0 for an all-day event.
