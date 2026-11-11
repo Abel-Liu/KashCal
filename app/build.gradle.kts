@@ -79,6 +79,24 @@ android {
     }
 
     signingConfigs {
+        System.getenv("DEBUG_KEYSTORE_FILE")?.let { path ->
+            val debugKeystore = file(path)
+            require(debugKeystore.isFile && debugKeystore.length() > 0L) {
+                "DEBUG_KEYSTORE_FILE must point to a nonempty keystore."
+            }
+            fun debugSigningValue(name: String): String =
+                requireNotNull(System.getenv(name)?.takeIf { it.isNotEmpty() }) {
+                    "$name is required when DEBUG_KEYSTORE_FILE is set."
+                }
+
+            getByName("debug") {
+                storeFile = debugKeystore
+                storePassword = debugSigningValue("DEBUG_KEYSTORE_PASSWORD")
+                keyAlias = debugSigningValue("DEBUG_KEY_ALIAS")
+                keyPassword = debugSigningValue("DEBUG_KEY_PASSWORD")
+            }
+        }
+
         // Release signing: env vars (CI) first, then local.properties
         val keystorePath = System.getenv("KEYSTORE_FILE") ?: localProps.getProperty("KEYSTORE_FILE")
         val keystorePassword = System.getenv("KEYSTORE_PASSWORD") ?: localProps.getProperty("KEYSTORE_PASSWORD")
