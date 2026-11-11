@@ -676,7 +676,7 @@ class HomeScreenComposeTest {
             )
         }
 
-        composeTestRule.onNodeWithContentDescription("Today").performClick()
+        composeTestRule.onNodeWithText("Today").performClick()
         assert(todayClicked)
     }
 

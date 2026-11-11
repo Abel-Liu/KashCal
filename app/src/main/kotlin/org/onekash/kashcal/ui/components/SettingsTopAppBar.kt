@@ -39,9 +39,8 @@ import androidx.compose.ui.unit.sp
 import org.onekash.kashcal.R
 
 /**
- * Shows the top app bar of Settings and its sub-screens: back and logo in the navigation slot,
- * [title] centered, [actions] trailing. The logo also calls [onNavigateBack], as the logo
- * navigates home elsewhere.
+ * Shows the top app bar of Settings and its sub-screens, with a back button,
+ * centered [title] and trailing [actions].
  *
  * With [isSearchActive], an inline search field styled like the home-screen search bar takes
  * the title's place, and back calls [onSearchClose] instead of navigating away.
@@ -53,9 +52,6 @@ fun SettingsTopAppBar(
     onNavigateBack: () -> Unit,
     backContentDescription: String = stringResource(R.string.cd_back),
     actions: @Composable RowScope.() -> Unit = {},
-    // The logo doubles as a jump-home-to-today shortcut, which fits screens reached from a
-    // calendar view. Detail screens opened from the account hub can hide it.
-    showLogo: Boolean = true,
     isSearchActive: Boolean = false,
     searchQuery: String = "",
     onSearchQueryChange: (String) -> Unit = {},
@@ -77,17 +73,11 @@ fun SettingsTopAppBar(
                 )
             },
             navigationIcon = {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(
-                            Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = backContentDescription,
-                        )
-                    }
-                    if (showLogo) {
-                        Spacer(modifier = Modifier.width(8.dp))
-                        TopBarLogoButton(onClick = onNavigateBack)
-                    }
+                IconButton(onClick = onNavigateBack) {
+                    Icon(
+                        Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = backContentDescription,
+                    )
                 }
             },
             actions = actions,

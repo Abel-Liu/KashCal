@@ -171,9 +171,6 @@ fun AppPermissionsScreen(
             SettingsTopAppBar(
                 title = stringResource(R.string.hub_app_permissions),
                 onNavigateBack = onBack,
-                // Reached from the account hub, where a "jump home to today" logo is out of
-                // place.
-                showLogo = false,
             )
         },
     ) { padding ->

@@ -152,7 +152,6 @@ import org.onekash.kashcal.ui.components.overflowContentDescription
 import org.onekash.kashcal.ui.components.SyncBanner
 import org.onekash.kashcal.ui.components.showsRemindersOffBanner
 import org.onekash.kashcal.ui.components.RemindersOffBanner
-import org.onekash.kashcal.ui.components.TopBarLogoButton
 import org.onekash.kashcal.ui.components.AgendaDayHeader
 import org.onekash.kashcal.ui.components.AgendaDisplayItem
 import org.onekash.kashcal.ui.components.AgendaListModel
@@ -1443,21 +1442,17 @@ private fun HomeTopAppBar(
                     )
                 },
                 navigationIcon = {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        IconButton(onClick = { onViewSelect(uiState.previousNonInsightsMode) }) {
-                            Icon(
-                                Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = stringResource(R.string.cd_back)
-                            )
-                        }
-                        Spacer(modifier = Modifier.width(8.dp))
-                        TopBarLogoButton(
-                            onClick = onGoToToday,
-                            today = today,
+                    IconButton(onClick = { onViewSelect(uiState.previousNonInsightsMode) }) {
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = stringResource(R.string.cd_back)
                         )
                     }
                 },
                 actions = {
+                    TextButton(onClick = onGoToToday) {
+                        Text(stringResource(R.string.label_today))
+                    }
                     AvatarTrigger(
                         pendingInvitesCount = pendingInvitesCount,
                         userInitials = uiState.userInitials,
@@ -1558,24 +1553,20 @@ private fun HomeTopAppBar(
                     }
                 },
                 navigationIcon = {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        IconButton(onClick = onMenuClick) {
-                            Icon(
-                                Icons.Default.Menu,
-                                contentDescription = if (isDrawerOpen) stringResource(R.string.cd_close_drawer) else stringResource(R.string.cd_open_drawer),
-                                modifier = Modifier
-                                    .size(26.dp)
-                                    .graphicsLayer { rotationZ = menuRotation }
-                            )
-                        }
-                        Spacer(modifier = Modifier.width(8.dp))
-                        TopBarLogoButton(
-                            onClick = onGoToToday,
-                            today = today,
+                    IconButton(onClick = onMenuClick) {
+                        Icon(
+                            Icons.Default.Menu,
+                            contentDescription = if (isDrawerOpen) stringResource(R.string.cd_close_drawer) else stringResource(R.string.cd_open_drawer),
+                            modifier = Modifier
+                                .size(26.dp)
+                                .graphicsLayer { rotationZ = menuRotation }
                         )
                     }
                 },
                 actions = {
+                    TextButton(onClick = onGoToToday) {
+                        Text(stringResource(R.string.label_today))
+                    }
                     AnimatedVisibility(visible = !isOnline && uiState.isConfigured) {
                         Icon(
                             Icons.Default.CloudOff,

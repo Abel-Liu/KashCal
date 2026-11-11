@@ -93,9 +93,6 @@ fun TagsScreen(
                 title = stringResource(R.string.tags_screen_title),
                 onNavigateBack = onNavigateBack,
                 backContentDescription = stringResource(R.string.subscriptions_cd_back),
-                // Reached from the account hub, not a calendar view, so a jump-to-today logo
-                // would be off-context here.
-                showLogo = false,
             )
         }
     ) { paddingValues ->

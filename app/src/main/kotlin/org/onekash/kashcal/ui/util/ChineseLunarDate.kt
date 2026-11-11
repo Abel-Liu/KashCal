@@ -31,18 +31,35 @@ private val lunarMonthStarts by lazy {
 }
 
 /** Returns the label for a Gregorian civil date covered by the published table. */
-internal fun chineseLunarLabel(date: LocalDate): String? {
+internal fun chineseLunarLabel(date: LocalDate, showFestivals: Boolean = false): String? {
     if (date.year !in 1901..2100) return null
 
     val epochDay = date.toEpochDay()
-    val index = lunarMonthStarts.binarySearchBy(epochDay) { it.epochDay }
-    if (index < 0) {
-        // The insertion point is one past the start of the current lunar month.
-        val monthStart = lunarMonthStarts[-index - 2]
-        return lunarDays[(epochDay - monthStart.epochDay).toInt()]
+    val searchResult = lunarMonthStarts.binarySearchBy(epochDay) { it.epochDay }
+    // For a non-start date, the insertion point is one past the current lunar month.
+    val index = if (searchResult >= 0) searchResult else -searchResult - 2
+    val monthStart = lunarMonthStarts[index]
+    val day = (epochDay - monthStart.epochDay).toInt() + 1
+    val month = monthStart.month
+    if (showFestivals) {
+        // Lunar New Year's Eve is the day before the next first month, even in a short twelfth month.
+        val nextMonth = lunarMonthStarts.getOrNull(index + 1)
+        if (nextMonth?.month == 1 && nextMonth.epochDay == epochDay + 1) return "除夕"
+        val festival = when (month * 100 + day) {
+            101 -> "春节"
+            115 -> "元宵"
+            505 -> "端午"
+            707 -> "七夕"
+            715 -> "中元"
+            815 -> "中秋"
+            909 -> "重阳"
+            1208 -> "腊八"
+            else -> null
+        }
+        if (festival != null) return festival
     }
 
-    val month = lunarMonthStarts[index].month
+    if (day != 1) return lunarDays[day - 1]
     val label = lunarMonths[abs(month) - 1]
     return if (month < 0) "闰$label" else label
 }

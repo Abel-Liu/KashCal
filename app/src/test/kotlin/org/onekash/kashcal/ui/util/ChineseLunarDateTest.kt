@@ -55,4 +55,21 @@ class ChineseLunarDateTest {
     fun formatsMidMonthDay() {
         assertEquals("十五", chineseLunarLabel(LocalDate.of(2025, 10, 6)))
     }
+
+    @Test
+    fun displaysFestivalsInsteadOfLunarDatesWhenRequested() {
+        val festivals = mapOf(
+            LocalDate.of(2024, 2, 9) to "除夕", // Twelfth month has 30 days.
+            LocalDate.of(2027, 2, 5) to "除夕", // Twelfth month has 29 days.
+            LocalDate.of(2027, 2, 6) to "春节",
+            LocalDate.of(2027, 2, 20) to "元宵",
+            LocalDate.of(2027, 6, 9) to "端午",
+            LocalDate.of(2027, 9, 15) to "中秋",
+        )
+        for ((date, festival) in festivals) {
+            assertEquals(festival, chineseLunarLabel(date, showFestivals = true))
+        }
+        assertEquals("初二", chineseLunarLabel(LocalDate.of(2027, 2, 7), showFestivals = true))
+        assertEquals("十五", chineseLunarLabel(LocalDate.of(1995, 10, 9), showFestivals = true)) // Leap August.
+    }
 }
