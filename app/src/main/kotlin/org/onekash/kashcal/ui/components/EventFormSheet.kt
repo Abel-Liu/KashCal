@@ -17,7 +17,6 @@ import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
@@ -28,7 +27,6 @@ import androidx.compose.material.icons.filled.DeleteOutline
 import androidx.compose.material.icons.filled.EventAvailable
 import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.LocationOn
-import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.Public
 import androidx.compose.material.icons.filled.Search
@@ -67,12 +65,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
@@ -111,7 +107,6 @@ import org.onekash.kashcal.ui.components.pickers.CalendarPickerRow
 import org.onekash.kashcal.ui.components.pickers.DateTimeDisplayRow
 import org.onekash.kashcal.ui.components.pickers.DateSelectionMode
 import org.onekash.kashcal.ui.components.pickers.DateTimeSheet
-import org.onekash.kashcal.ui.components.pickers.EventColorPalettePanel
 import org.onekash.kashcal.ui.components.pickers.EventFormRow
 import org.onekash.kashcal.ui.components.pickers.RecurrencePickerRow
 import org.onekash.kashcal.ui.components.pickers.ReminderPickerRow
@@ -121,7 +116,6 @@ import org.onekash.kashcal.ui.components.pickers.untilForPickedDate
 import org.onekash.kashcal.ui.model.CalendarGroup
 import org.onekash.kashcal.ui.model.PickerCalendar
 import org.onekash.kashcal.ui.model.localizedDisplayName
-import org.onekash.kashcal.ui.shared.EventColorPalette
 import org.onekash.kashcal.ui.shared.MAX_REMINDERS
 import org.onekash.kashcal.ui.shared.REMINDER_OFF
 import org.onekash.kashcal.ui.shared.contrastForegroundOn
@@ -960,8 +954,7 @@ fun EventFormSheet(
     // with safeDrawingPadding handles the status bar, IME and nav bar insets, as in
     // QuickAddDialog. The platform back dismissal is off (dismissOnBackPress = false):
     // back goes through the content's BackHandler to attemptDismiss, like Cancel, so
-    // the discard guard still fires. An open color palette takes back first
-    // ([EventColorPalettePanel]).
+    // the discard guard still fires.
     Dialog(
         onDismissRequest = attemptDismiss,
         properties = DialogProperties(
@@ -1788,9 +1781,7 @@ fun EventFormContent(
     }
     SideEffect { onHasChangesChange(hasUnsavedChanges) }
 
-    // Back runs the same dismiss guard as Cancel, unless the color palette is open: its
-    // own handler, registered later, takes back first ([EventColorPalettePanel]). This
-    // content sits in the form's own dialog window, whose built-in back dismissal is off.
+    // Back runs the same dismiss guard as Cancel in the form dialog.
     BackHandler(onBack = onRequestDismiss)
 
     val paneTitleText = if (state.isEditMode) {
@@ -2073,103 +2064,6 @@ fun EventFormContent(
                 }
                 }
 
-                // Location sits under the title, above the date and time.
-                var locationExpanded by remember { mutableStateOf(false) }
-                var locationSuggestions by remember { mutableStateOf<List<AddressSuggestion>>(emptyList()) }
-                var isLoadingLocationSuggestions by remember { mutableStateOf(false) }
-                var locationSearchJob by remember { mutableStateOf<Job?>(null) }
-
-                if (shouldShowReadOnlyOptionalField(state.location, isReadOnly)) {
-                EventFormRow(
-                    icon = Icons.Default.LocationOn,
-                    iconContentDescription = stringResource(R.string.label_location),
-                    verticalPadding = 4.dp,
-                ) {
-                    if (isReadOnly) {
-                        Text(
-                            text = state.location,
-                            style = MaterialTheme.typography.bodyLarge,
-                            modifier = Modifier.fillMaxWidth(),
-                        )
-                    } else {
-                    ExposedDropdownMenuBox(
-                        expanded = locationExpanded && locationSuggestions.isNotEmpty(),
-                        onExpandedChange = { locationExpanded = it },
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        OutlinedTextField(
-                            value = state.location,
-                            onValueChange = { raw ->
-                                // A location is one logical line; without
-                                // singleLine the Enter key inserts a newline.
-                                val newValue = raw.replace("\n", "")
-                                state = state.copy(location = newValue)
-                                locationSearchJob?.cancel()
-                                if (locationSuggestionService != null &&
-                                    newValue.length >= 5 &&
-                                    newValue.any { it.isLetter() }
-                                ) {
-                                    locationSearchJob = coroutineScope.launch {
-                                        delay(300)
-                                        isLoadingLocationSuggestions = true
-                                        locationSuggestions = locationSuggestionService.getSuggestions(newValue)
-                                        isLoadingLocationSuggestions = false
-                                        locationExpanded = locationSuggestions.isNotEmpty()
-                                    }
-                                } else {
-                                    locationSuggestions = emptyList()
-                                    locationExpanded = false
-                                }
-                            },
-                            placeholder = { Text(stringResource(R.string.label_location_hint)) },
-                            modifier = fieldGestureMarker
-                                .fillMaxWidth()
-                                .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryEditable),
-                            // Wraps a long address to a second line.
-                            maxLines = 2,
-                            enabled = !isReadOnly,
-                            colors = OutlinedTextFieldDefaults.colors(
-                                unfocusedBorderColor = Color.Transparent,
-                                focusedBorderColor = Color.Transparent,
-                                unfocusedContainerColor = Color.Transparent,
-                                focusedContainerColor = Color.Transparent
-                            ),
-                            trailingIcon = {
-                                if (isLoadingLocationSuggestions) {
-                                    CircularProgressIndicator(
-                                        modifier = Modifier.size(20.dp),
-                                        strokeWidth = 2.dp
-                                    )
-                                } else if (state.location.isNotEmpty() && locationSuggestionService != null) {
-                                    Icon(Icons.Default.Search, contentDescription = stringResource(R.string.cd_search))
-                                }
-                            }
-                        )
-
-                        ExposedDropdownMenu(
-                            expanded = locationExpanded && locationSuggestions.isNotEmpty(),
-                            onDismissRequest = { locationExpanded = false }
-                        ) {
-                            locationSuggestions.forEach { suggestion ->
-                                DropdownMenuItem(
-                                    text = { Text(suggestion.displayName) },
-                                    onClick = {
-                                        state = state.copy(location = suggestion.displayName)
-                                        locationExpanded = false
-                                        locationSuggestions = emptyList()
-                                    },
-                                    leadingIcon = {
-                                        Icon(Icons.Default.Place, contentDescription = null)
-                                    },
-                                    modifier = Modifier.height(48.dp)
-                                )
-                            }
-                        }
-                    }
-                    }
-                }
-                }
-
                 HorizontalDivider(modifier = Modifier.padding(vertical = SECTION_DIVIDER_SPACING))
 
 
@@ -2296,52 +2190,6 @@ fun EventFormContent(
                     onNewOfflineCalendar = onCreateOfflineCalendar?.let { { showNewOfflineCalendar = true } },
                 )
 
-                val colorExpanded = expandedPicker == "color"
-                EventFormRow(
-                    icon = Icons.Default.Palette,
-                    iconContentDescription = stringResource(R.string.label_event_color),
-                    isExpanded = colorExpanded,
-                    showExpandIcon = !isReadOnly,
-                    onToggle = { if (!isReadOnly) expandedPicker = if (colorExpanded) null else "color" },
-                    expandedContent = {
-                        EventColorPalettePanel(
-                            selectedArgb = state.eventColor,
-                            calendarDefaultArgb = state.selectedCalendarColor
-                                ?: MaterialTheme.colorScheme.primary.toArgb(),
-                            expanded = colorExpanded,
-                            onColorSelected = { color ->
-                                state = state.copy(eventColor = color)
-                                expandedPicker = null
-                            },
-                            onCollapse = { expandedPicker = null },
-                        )
-                    },
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        val fallbackArgb = MaterialTheme.colorScheme.primary.toArgb()
-                        val dotColor = state.eventColor
-                            ?: state.selectedCalendarColor
-                            ?: fallbackArgb
-                        Box(
-                            modifier = Modifier
-                                .size(16.dp)
-                                .clip(CircleShape)
-                                .background(Color(dotColor))
-                        )
-                        Text(
-                            stringResource(
-                                if (state.eventColor == null) R.string.label_event_color
-                                else EventColorPalette.stringResIdForColor(state.eventColor)
-                            ),
-                            style = MaterialTheme.typography.bodyLarge
-                        )
-                    }
-                }
-
                 ReminderPickerRow(
                     reminders = state.reminders,
                     isAllDay = state.isAllDay,
@@ -2368,6 +2216,103 @@ fun EventFormContent(
                 )
 
                 HorizontalDivider(modifier = Modifier.padding(vertical = SECTION_DIVIDER_SPACING))
+
+                // Location and notes share the same section.
+                var locationExpanded by remember { mutableStateOf(false) }
+                var locationSuggestions by remember { mutableStateOf<List<AddressSuggestion>>(emptyList()) }
+                var isLoadingLocationSuggestions by remember { mutableStateOf(false) }
+                var locationSearchJob by remember { mutableStateOf<Job?>(null) }
+
+                if (shouldShowReadOnlyOptionalField(state.location, isReadOnly)) {
+                EventFormRow(
+                    icon = Icons.Default.LocationOn,
+                    iconContentDescription = stringResource(R.string.label_location),
+                    verticalPadding = 4.dp,
+                ) {
+                    if (isReadOnly) {
+                        Text(
+                            text = state.location,
+                            style = MaterialTheme.typography.bodyLarge,
+                            modifier = Modifier.fillMaxWidth(),
+                        )
+                    } else {
+                    ExposedDropdownMenuBox(
+                        expanded = locationExpanded && locationSuggestions.isNotEmpty(),
+                        onExpandedChange = { locationExpanded = it },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        OutlinedTextField(
+                            value = state.location,
+                            onValueChange = { raw ->
+                                // A location is one logical line; without
+                                // singleLine the Enter key inserts a newline.
+                                val newValue = raw.replace("\n", "")
+                                state = state.copy(location = newValue)
+                                locationSearchJob?.cancel()
+                                if (locationSuggestionService != null &&
+                                    newValue.length >= 5 &&
+                                    newValue.any { it.isLetter() }
+                                ) {
+                                    locationSearchJob = coroutineScope.launch {
+                                        delay(300)
+                                        isLoadingLocationSuggestions = true
+                                        locationSuggestions = locationSuggestionService.getSuggestions(newValue)
+                                        isLoadingLocationSuggestions = false
+                                        locationExpanded = locationSuggestions.isNotEmpty()
+                                    }
+                                } else {
+                                    locationSuggestions = emptyList()
+                                    locationExpanded = false
+                                }
+                            },
+                            placeholder = { Text(stringResource(R.string.label_location_hint)) },
+                            modifier = fieldGestureMarker
+                                .fillMaxWidth()
+                                .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryEditable),
+                            // Wraps a long address to a second line.
+                            maxLines = 2,
+                            enabled = !isReadOnly,
+                            colors = OutlinedTextFieldDefaults.colors(
+                                unfocusedBorderColor = Color.Transparent,
+                                focusedBorderColor = Color.Transparent,
+                                unfocusedContainerColor = Color.Transparent,
+                                focusedContainerColor = Color.Transparent
+                            ),
+                            trailingIcon = {
+                                if (isLoadingLocationSuggestions) {
+                                    CircularProgressIndicator(
+                                        modifier = Modifier.size(20.dp),
+                                        strokeWidth = 2.dp
+                                    )
+                                } else if (state.location.isNotEmpty() && locationSuggestionService != null) {
+                                    Icon(Icons.Default.Search, contentDescription = stringResource(R.string.cd_search))
+                                }
+                            }
+                        )
+
+                        ExposedDropdownMenu(
+                            expanded = locationExpanded && locationSuggestions.isNotEmpty(),
+                            onDismissRequest = { locationExpanded = false }
+                        ) {
+                            locationSuggestions.forEach { suggestion ->
+                                DropdownMenuItem(
+                                    text = { Text(suggestion.displayName) },
+                                    onClick = {
+                                        state = state.copy(location = suggestion.displayName)
+                                        locationExpanded = false
+                                        locationSuggestions = emptyList()
+                                    },
+                                    leadingIcon = {
+                                        Icon(Icons.Default.Place, contentDescription = null)
+                                    },
+                                    modifier = Modifier.height(48.dp)
+                                )
+                            }
+                        }
+                    }
+                    }
+                }
+                }
 
                 if (shouldShowReadOnlyOptionalField(state.description, isReadOnly)) {
                 EventFormRow(
@@ -2404,8 +2349,8 @@ fun EventFormContent(
                 }
                 }
 
-                // Separate notes from scheduling when the notes row is visible.
-                if (!isReadOnly || state.description.isNotBlank()) {
+                // Separate the details and scheduling sections when a detail row is visible.
+                if (!isReadOnly || state.location.isNotBlank() || state.description.isNotBlank()) {
                     HorizontalDivider(
                         modifier = Modifier
                             .padding(vertical = SECTION_DIVIDER_SPACING)

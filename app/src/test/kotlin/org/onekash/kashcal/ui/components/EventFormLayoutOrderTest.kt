@@ -93,12 +93,12 @@ class EventFormLayoutOrderTest {
             .fetchSemanticsNode().boundsInRoot.top
 
     @Test
-    fun `location renders above the date-time section`() {
+    fun `location renders between the date-time section and notes`() {
         renderForm()
         // The date/time section's row carries the "All day" icon description.
         assertTrue(
-            "Location must sit above the date/time row",
-            topOf("Location") < topOf("All day"),
+            "Location must sit below the date/time row and above Notes",
+            topOf("All day") < topOf("Location") && topOf("Location") < topOf("Notes"),
         )
     }
 
@@ -140,6 +140,7 @@ class EventFormLayoutOrderTest {
     @Test
     fun `all core rows are present in create mode`() {
         renderForm()
+        composeTestRule.onNodeWithContentDescription("Event color", useUnmergedTree = true).assertDoesNotExist()
         listOf("Location", "Notes", "Attendees", "Availability")
             .forEach { composeTestRule.onNodeWithContentDescription(it, useUnmergedTree = true).assertIsDisplayed() }
     }
@@ -223,8 +224,9 @@ class EventFormLayoutOrderTest {
         renderForm()
         val dividerTop = composeTestRule.onNodeWithTag(TAG_GROUP_DIVIDER, useUnmergedTree = true)
             .fetchSemanticsNode().boundsInRoot.top
-        // Personal group (Notes) above the divider; scheduling group
+        // Location and Notes above the divider; scheduling group
         // (Attendees/Free-Busy) below it.
+        assertTrue("Location is above the group divider", topOf("Location") < dividerTop)
         assertTrue("Notes is above the group divider", topOf("Notes") < dividerTop)
         assertTrue("Attendees is below the group divider", dividerTop < topOf("Attendees"))
         assertTrue("Free/Busy is below the group divider", dividerTop < topOf("Availability"))
