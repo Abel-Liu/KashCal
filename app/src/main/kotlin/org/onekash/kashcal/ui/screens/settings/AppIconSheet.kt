@@ -14,9 +14,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.OpenInNew
 import androidx.compose.material.icons.filled.Check
@@ -87,6 +89,7 @@ fun AppIconSheet(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
+                .verticalScroll(rememberScrollState())
                 .padding(bottom = 32.dp)
                 // Groups the icon option rows for TalkBack "N of M"; the footer link and
                 // info note aren't selectable, so they stay outside the radio group.
@@ -108,21 +111,27 @@ fun AppIconSheet(
                     today = today,
                     isSelected = currentPreset == preset,
                     onSelect = {
-                        if (preset == AppIconPreset.TODAYS_DATE) {
-                            scope.launch {
-                                val added = withContext(Dispatchers.IO) {
-                                    runCatching { TodayDateShortcut.addOrRefresh(context) }.getOrDefault(false)
-                                }
-                                if (added) onDismiss()
-                                else Toast.makeText(context, shortcutError, Toast.LENGTH_SHORT).show()
-                            }
-                        } else {
-                            onPresetSelect(preset)
-                            onDismiss()
-                        }
+                        onPresetSelect(preset)
+                        onDismiss()
                     },
                 )
             }
+
+            AppIconOptionRow(
+                preset = AppIconPreset.TODAYS_DATE,
+                today = today,
+                isSelected = false,
+                isShortcut = true,
+                onSelect = {
+                    scope.launch {
+                        val added = withContext(Dispatchers.IO) {
+                            runCatching { TodayDateShortcut.addOrRefresh(context) }.getOrDefault(false)
+                        }
+                        if (added) onDismiss()
+                        else Toast.makeText(context, shortcutError, Toast.LENGTH_SHORT).show()
+                    }
+                },
+            )
 
             HorizontalDivider(
                 color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
@@ -197,8 +206,8 @@ private fun AppIconOptionRow(
     today: LocalDate,
     isSelected: Boolean,
     onSelect: () -> Unit,
+    isShortcut: Boolean = false,
 ) {
-    val isShortcut = preset == AppIconPreset.TODAYS_DATE
     val interaction = if (isShortcut) {
         Modifier.clickable(role = Role.Button, onClick = onSelect)
     } else {
@@ -228,7 +237,7 @@ private fun AppIconOptionRow(
                     .clip(RoundedCornerShape(10.dp))
                     .background(
                         colorResource(
-                            if (isShortcut) R.color.ic_launcher_date_background
+                            if (preset == AppIconPreset.TODAYS_DATE) R.color.ic_launcher_date_background
                             else R.color.ic_launcher_background
                         )
                     ),
@@ -251,7 +260,10 @@ private fun AppIconOptionRow(
             }
             Spacer(modifier = Modifier.width(16.dp))
             Column {
-                Text(text = stringResource(preset.labelRes), style = MaterialTheme.typography.bodyLarge)
+                Text(
+                    text = stringResource(if (isShortcut) R.string.app_icon_today_shortcut_title else preset.labelRes),
+                    style = MaterialTheme.typography.bodyLarge,
+                )
                 if (isShortcut) {
                     Text(
                         text = stringResource(R.string.app_icon_today_shortcut_hint),

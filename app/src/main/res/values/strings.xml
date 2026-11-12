@@ -286,6 +286,7 @@
     <string name="app_icon_supporter">Supporter</string>
     <string name="app_icon_supporter_calendar">Supporter, labeled Calendar</string>
     <string name="app_icon_todays_date">Today\'s date</string>
+    <string name="app_icon_today_shortcut_title">Calendar shortcut</string>
     <string name="app_icon_today_shortcut_hint">Add to Home screen</string>
     <string name="app_icon_today_shortcut_error">Could not add or refresh the Home screen shortcut.</string>
     <string name="app_icon_label_calendar">Calendar</string>

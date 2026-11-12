@@ -49,7 +49,7 @@ internal object TodayDateShortcut {
 
     private fun shortcut(context: Context, date: LocalDate): ShortcutInfo =
         ShortcutInfo.Builder(context, TODAY_DATE_SHORTCUT_ID)
-            .setShortLabel(context.getString(R.string.app_icon_todays_date))
+            .setShortLabel(context.getString(R.string.app_icon_label_calendar))
             .setIcon(Icon.createWithAdaptiveBitmap(renderTodayDateIcon(date, context.resources.configuration.locales[0])))
             .setIntent(
                 Intent(Intent.ACTION_VIEW, null, context, MainActivity::class.java)
@@ -75,10 +75,10 @@ internal fun renderTodayDateIcon(date: LocalDate, locale: Locale): Bitmap {
         canvas.drawText(text, BITMAP_SIZE / 2f, baseline, paint)
     }
 
-    line(date.dayOfWeek.getDisplayName(TextStyle.SHORT, locale), 18f, 71f, 0xFFB32642.toInt(), Typeface.DEFAULT_BOLD)
-    line(date.dayOfMonth.toString(), 61f, 106f, 0xFF191F32.toInt(), Typeface.create("sans-serif-medium", Typeface.NORMAL))
+    line(date.dayOfWeek.getDisplayName(TextStyle.SHORT, locale), 21f, 68f, 0xFFB32642.toInt(), Typeface.DEFAULT_BOLD)
+    line(date.dayOfMonth.toString(), 66f, 106f, 0xFF191F32.toInt(), Typeface.create("sans-serif-medium", Typeface.NORMAL))
     chineseLunarFullDate(date)?.let {
-        line(it, 16f, 148f, 0xFF455778.toInt(), Typeface.DEFAULT)
+        line(it, 19f, 150f, 0xFF455778.toInt(), Typeface.DEFAULT)
     }
     return bitmap
 }
