@@ -30,8 +30,16 @@ private val lunarMonthStarts by lazy {
     }
 }
 
+internal data class ChineseLunarDisplayLabel(val text: String, val isObservance: Boolean = false)
+
+internal fun chineseLunarLabel(date: LocalDate, showFestivals: Boolean = false): String? =
+    chineseLunarDisplayLabel(date, showObservances = showFestivals)?.text
+
 /** Returns the label for a Gregorian civil date covered by the published table. */
-internal fun chineseLunarLabel(date: LocalDate, showFestivals: Boolean = false): String? {
+internal fun chineseLunarDisplayLabel(
+    date: LocalDate,
+    showObservances: Boolean = true,
+): ChineseLunarDisplayLabel? {
     if (date.year !in 1901..2100) return null
 
     val epochDay = date.toEpochDay()
@@ -39,10 +47,12 @@ internal fun chineseLunarLabel(date: LocalDate, showFestivals: Boolean = false):
     val monthStart = lunarMonthStarts[index]
     val day = (epochDay - monthStart.epochDay).toInt() + 1
     val month = monthStart.month
-    if (showFestivals) {
+    if (showObservances) {
         // Lunar New Year's Eve is the day before the next first month, even in a short twelfth month.
         val nextMonth = lunarMonthStarts.getOrNull(index + 1)
-        if (nextMonth?.month == 1 && nextMonth.epochDay == epochDay + 1) return "除夕"
+        if (nextMonth?.month == 1 && nextMonth.epochDay == epochDay + 1) {
+            return ChineseLunarDisplayLabel("除夕", isObservance = true)
+        }
         val festival = when (month * 100 + day) {
             101 -> "春节"
             115 -> "元宵"
@@ -54,11 +64,12 @@ internal fun chineseLunarLabel(date: LocalDate, showFestivals: Boolean = false):
             1208 -> "腊八"
             else -> null
         }
-        if (festival != null) return festival
+        val observance = festival ?: chineseSolarTerm(date)
+        if (observance != null) return ChineseLunarDisplayLabel(observance, isObservance = true)
     }
 
-    if (day != 1) return lunarDays[day - 1]
-    return lunarMonthLabel(month)
+    val label = if (day != 1) lunarDays[day - 1] else lunarMonthLabel(month)
+    return ChineseLunarDisplayLabel(label)
 }
 
 /** The month and day together, for surfaces that only show one Gregorian date. */

@@ -65,6 +65,32 @@ class ChineseLunarDateTest {
     }
 
     @Test
+    fun displaysSolarTermsOnPublishedGregorianDates() {
+        assertEquals("立春", chineseLunarLabel(LocalDate.of(2027, 2, 4), showFestivals = true))
+        assertEquals("廿八", chineseLunarLabel(LocalDate.of(2027, 2, 4)))
+        assertEquals("清明", chineseLunarLabel(LocalDate.of(2027, 4, 5), showFestivals = true))
+        assertEquals("小寒", chineseLunarLabel(LocalDate.of(2100, 1, 5), showFestivals = true))
+    }
+
+    @Test
+    fun identifiesRedLabelsAndKeepsFestivalPriority() {
+        val newYearsEve = LocalDate.of(2019, 2, 4)
+        assertEquals("立春", chineseSolarTerm(newYearsEve))
+        assertEquals(
+            ChineseLunarDisplayLabel("除夕", isObservance = true),
+            chineseLunarDisplayLabel(newYearsEve),
+        )
+        assertEquals(
+            ChineseLunarDisplayLabel("立春", isObservance = true),
+            chineseLunarDisplayLabel(LocalDate.of(2027, 2, 4)),
+        )
+        assertEquals(
+            ChineseLunarDisplayLabel("初二"),
+            chineseLunarDisplayLabel(LocalDate.of(2027, 2, 7)),
+        )
+    }
+
+    @Test
     fun displaysFestivalsInsteadOfLunarDatesWhenRequested() {
         val festivals = mapOf(
             LocalDate.of(2024, 2, 9) to "除夕", // Twelfth month has 30 days.
@@ -78,6 +104,6 @@ class ChineseLunarDateTest {
             assertEquals(festival, chineseLunarLabel(date, showFestivals = true))
         }
         assertEquals("初二", chineseLunarLabel(LocalDate.of(2027, 2, 7), showFestivals = true))
-        assertEquals("十五", chineseLunarLabel(LocalDate.of(1995, 10, 9), showFestivals = true)) // Leap August.
+        assertEquals("寒露", chineseLunarLabel(LocalDate.of(1995, 10, 9), showFestivals = true)) // Leap August has no Mid-Autumn Festival.
     }
 }
