@@ -61,7 +61,6 @@ import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.paneTitle
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -133,7 +132,6 @@ fun EventQuickViewSheet(
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     var showMoreMenu by remember { mutableStateOf(false) }
-    var showDeleteConfirmation by remember { mutableStateOf(false) }
     var showAttendeeSheet by remember { mutableStateOf(false) }
 
     val context = LocalContext.current
@@ -397,129 +395,83 @@ fun EventQuickViewSheet(
                         )
                     }
                 } else {
-                    // Editable calendar: Edit, Delete, More. Delete on a one-off
-                    // event or an exception commits at once in the host, so it
-                    // takes an inline two-tap confirm; a master's scope sheet is
-                    // its own confirmation.
-                    if (!showDeleteConfirmation) {
+                    FilledTonalButton(
+                        onClick = onEdit,
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Icon(
+                            Icons.Default.Edit,
+                            contentDescription = stringResource(
+                                if (canEditAsOrganizer) R.string.action_edit
+                                else R.string.action_open
+                            )
+                        )
+                    }
+
+                    FilledTonalButton(
+                        onClick = onDeleteSingle,
+                        modifier = Modifier.weight(1f),
+                        colors = ButtonDefaults.filledTonalButtonColors(
+                            containerColor = MaterialTheme.colorScheme.errorContainer,
+                            contentColor = MaterialTheme.colorScheme.onErrorContainer
+                        )
+                    ) {
+                        Icon(
+                            Icons.Default.Delete,
+                            contentDescription = stringResource(R.string.action_delete)
+                        )
+                    }
+
+                    Box {
                         FilledTonalButton(
-                            onClick = onEdit,
-                            modifier = Modifier.weight(1f)
+                            onClick = { showMoreMenu = true }
                         ) {
                             Icon(
-                                Icons.Default.Edit,
-                                contentDescription = stringResource(
-                                    if (canEditAsOrganizer) R.string.action_edit
-                                    else R.string.action_open
-                                )
+                                Icons.Default.MoreVert,
+                                contentDescription = stringResource(R.string.cd_more_options)
                             )
                         }
 
-                        FilledTonalButton(
-                            onClick = {
-                                // Only a master gets the scope sheet;
-                                // everything else confirms inline.
-                                if (event.isRecurring && !event.isException) {
-                                    onDeleteSingle()
-                                } else {
-                                    showDeleteConfirmation = true
+                        DropdownMenu(
+                            expanded = showMoreMenu,
+                            onDismissRequest = { showMoreMenu = false }
+                        ) {
+                            DropdownMenuItem(
+                                text = { Text(stringResource(R.string.action_duplicate)) },
+                                onClick = {
+                                    showMoreMenu = false
+                                    onDuplicate()
+                                },
+                                leadingIcon = {
+                                    Icon(Icons.Default.ContentCopy, contentDescription = stringResource(R.string.cd_duplicate))
                                 }
-                            },
-                            modifier = Modifier.weight(1f),
-                            colors = ButtonDefaults.filledTonalButtonColors(
-                                containerColor = MaterialTheme.colorScheme.errorContainer,
-                                contentColor = MaterialTheme.colorScheme.onErrorContainer
                             )
-                        ) {
-                            Icon(
-                                Icons.Default.Delete,
-                                contentDescription = stringResource(R.string.action_delete)
+                            DropdownMenuItem(
+                                text = { Text(stringResource(R.string.action_share_as_text)) },
+                                onClick = {
+                                    showMoreMenu = false
+                                    onShare()
+                                },
+                                leadingIcon = {
+                                    Icon(Icons.Default.Share, contentDescription = stringResource(R.string.cd_share))
+                                }
                             )
-                        }
-                    } else {
-                        FilledTonalButton(
-                            onClick = { showDeleteConfirmation = false },
-                            modifier = Modifier.weight(1f),
-                        ) {
-                            Text(
-                                stringResource(R.string.action_cancel),
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis,
-                                textAlign = TextAlign.Center
+                            DropdownMenuItem(
+                                text = { Text(stringResource(R.string.action_export_ics)) },
+                                onClick = {
+                                    showMoreMenu = false
+                                    onExportIcs()
+                                },
+                                leadingIcon = {
+                                    Icon(Icons.Default.FileDownload, contentDescription = stringResource(R.string.cd_export_ics))
+                                }
                             )
                         }
-                        FilledTonalButton(
-                            onClick = {
-                                showDeleteConfirmation = false
-                                onDeleteSingle()
-                            },
-                            modifier = Modifier.weight(1f),
-                            colors = ButtonDefaults.filledTonalButtonColors(
-                                containerColor = MaterialTheme.colorScheme.error,
-                                contentColor = MaterialTheme.colorScheme.onError
-                            )
-                        ) {
-                            Text(
-                                stringResource(R.string.action_confirm),
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis,
-                                textAlign = TextAlign.Center
-                            )
-                        }
-                    }
-
-                    if (!showDeleteConfirmation) {
-                        Box {
-                            FilledTonalButton(
-                                onClick = { showMoreMenu = true }
-                            ) {
-                                Icon(
-                                    Icons.Default.MoreVert,
-                                    contentDescription = stringResource(R.string.cd_more_options)
-                                )
-                            }
-
-                            DropdownMenu(
-                                expanded = showMoreMenu,
-                                onDismissRequest = { showMoreMenu = false }
-                            ) {
-                                DropdownMenuItem(
-                                    text = { Text(stringResource(R.string.action_duplicate)) },
-                                    onClick = {
-                                        showMoreMenu = false
-                                        onDuplicate()
-                                    },
-                                    leadingIcon = {
-                                        Icon(Icons.Default.ContentCopy, contentDescription = stringResource(R.string.cd_duplicate))
-                                    }
-                                )
-                                DropdownMenuItem(
-                                    text = { Text(stringResource(R.string.action_share_as_text)) },
-                                    onClick = {
-                                        showMoreMenu = false
-                                        onShare()
-                                    },
-                                    leadingIcon = {
-                                        Icon(Icons.Default.Share, contentDescription = stringResource(R.string.cd_share))
-                                    }
-                                )
-                                DropdownMenuItem(
-                                    text = { Text(stringResource(R.string.action_export_ics)) },
-                                    onClick = {
-                                        showMoreMenu = false
-                                        onExportIcs()
-                                    },
-                                    leadingIcon = {
-                                        Icon(Icons.Default.FileDownload, contentDescription = stringResource(R.string.cd_export_ics))
-                                    }
-                                )
-                            }
-                        }
-                    }
                     }
                 }
             }
         }
+    }
 
     if (showAttendeeSheet) {
         org.onekash.kashcal.ui.components.attendees.AttendeeListSheet(

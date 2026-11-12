@@ -148,16 +148,12 @@ class DeviceEventQuickViewSheetSizeTest {
     }
 
     @Test
-    fun `a long one-off device event deletes through the confirm on screen`() {
+    fun `a long one-off device event deletes on the first tap`() {
         val calls = render(deviceEvent(longTitle))
 
+        labelled(R.string.action_delete).assertFullyOnScreen()
         labelled(R.string.action_delete).performClick()
-        composeTestRule.waitForIdle()
-
-        labelled(R.string.action_cancel).assertFullyOnScreen()
-        labelled(R.string.action_confirm).assertFullyOnScreen()
-        labelled(R.string.action_confirm).performClick()
-        assertEquals(1, calls.delete)
+        composeTestRule.runOnIdle { assertEquals(1, calls.delete) }
     }
 
     @Test

@@ -58,18 +58,6 @@ class EventQuickViewSheetTest {
         return event.isRecurring || event.isException
     }
 
-    /**
-     * Copies the sheet's Delete onClick: returns true when Delete must show the inline
-     * two-tap confirm before onDeleteSingle.
-     *
-     * Only a recurring master skips it, because the host opens a scope sheet for it. The host
-     * deletes an exception at once with no scope sheet, so it needs the inline confirm like a
-     * one-off event.
-     */
-    private fun shouldShowQuickViewDeleteConfirm(event: Event): Boolean {
-        return !(event.isRecurring && !event.isException)
-    }
-
     /** Returns [formatRruleDisplay] for an RRULE, else "Recurring" (an exception's text). */
     private fun getRepeatText(event: Event): String {
         return if (event.rrule != null) {
@@ -152,29 +140,6 @@ class EventQuickViewSheetTest {
         assertTrue("Exception with rrule should be detected as recurring", isRecurringForQuickView(event))
         assertTrue("Event.isRecurring should be true", event.isRecurring)
         assertTrue("Event.isException should be true", event.isException)
-    }
-
-    // ========== Delete-Confirmation Predicate Tests ==========
-
-    @Test
-    fun `Delete on recurring master skips inline confirm — scope sheet is the confirmation`() {
-        val master = createEvent(rrule = "FREQ=DAILY", originalEventId = null)
-        assertFalse(shouldShowQuickViewDeleteConfirm(master))
-    }
-
-    @Test
-    fun `Delete on exception event shows inline confirm — no scope sheet on this path`() {
-        // A predicate of `isRecurring || isException` alone would skip the confirm here, and
-        // MainActivity's onDeleteSingle calls deleteSingleOccurrence for an exception with no
-        // scope sheet, so one tap would delete it.
-        val exception = createEvent(rrule = null, originalEventId = 100L)
-        assertTrue(shouldShowQuickViewDeleteConfirm(exception))
-    }
-
-    @Test
-    fun `Delete on non-recurring event shows inline confirm`() {
-        val nonRecurring = createEvent(rrule = null, originalEventId = null)
-        assertTrue(shouldShowQuickViewDeleteConfirm(nonRecurring))
     }
 
     @Test
@@ -314,76 +279,6 @@ class EventQuickViewSheetTest {
             ""
         }
         assertEquals("", iconText)
-    }
-
-    // ========== Button Visibility Logic Tests ==========
-
-    // These assert local booleans, not the sheet. The sheet has a delete confirmation that
-    // hides Edit and More; it has no edit confirmation.
-
-    @Test
-    fun `normal state shows Edit Delete and More buttons`() {
-        val showEditConfirmation = false
-        val showDeleteConfirmation = false
-
-        // Edit visible when not in delete confirmation
-        val showEditButton = !showDeleteConfirmation && !showEditConfirmation
-        assertTrue("Edit button should be visible", showEditButton)
-
-        // Delete visible when not in edit confirmation
-        val showDeleteButton = !showEditConfirmation && !showDeleteConfirmation
-        assertTrue("Delete button should be visible", showDeleteButton)
-
-        // More visible when no confirmation active
-        val showMoreButton = !showEditConfirmation && !showDeleteConfirmation
-        assertTrue("More button should be visible", showMoreButton)
-    }
-
-    @Test
-    fun `edit confirmation hides Delete and More buttons`() {
-        val showEditConfirmation = true
-        val showDeleteConfirmation = false
-
-        // Edit area shows Cancel/Confirm
-        val showEditCancelConfirm = !showDeleteConfirmation && showEditConfirmation
-        assertTrue("Edit Cancel/Confirm should be visible", showEditCancelConfirm)
-
-        // Delete hidden during edit confirmation
-        val showDeleteButton = !showEditConfirmation
-        assertFalse("Delete button should be hidden", showDeleteButton)
-
-        // More hidden during edit confirmation
-        val showMoreButton = !showEditConfirmation && !showDeleteConfirmation
-        assertFalse("More button should be hidden", showMoreButton)
-    }
-
-    @Test
-    fun `delete confirmation hides Edit and More buttons`() {
-        val showEditConfirmation = false
-        val showDeleteConfirmation = true
-
-        // Edit hidden during delete confirmation
-        val showEditButton = !showDeleteConfirmation
-        assertFalse("Edit button should be hidden", showEditButton)
-
-        // Delete area shows Cancel/Confirm
-        val showDeleteCancelConfirm = !showEditConfirmation && showDeleteConfirmation
-        assertTrue("Delete Cancel/Confirm should be visible", showDeleteCancelConfirm)
-
-        // More hidden during delete confirmation
-        val showMoreButton = !showEditConfirmation && !showDeleteConfirmation
-        assertFalse("More button should be hidden", showMoreButton)
-    }
-
-    @Test
-    fun `confirmation state shows exactly 2 buttons`() {
-        // Edit confirmation: Cancel + Confirm = 2 buttons
-        val editConfirmButtons = 2  // Cancel, Confirm
-        assertEquals("Edit confirmation should show 2 buttons", 2, editConfirmButtons)
-
-        // Delete confirmation: Cancel + Confirm = 2 buttons
-        val deleteConfirmButtons = 2  // Cancel, Confirm
-        assertEquals("Delete confirmation should show 2 buttons", 2, deleteConfirmButtons)
     }
 
     // ========== Read-Only Calendar Tests ==========

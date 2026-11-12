@@ -19,8 +19,8 @@ import org.onekash.kashcal.ui.components.pickers.DateSelectionMode
  * [eventFormHasUnsavedChanges], [resolveFormDismiss] and [shouldRebaselineOnCalendarResolve].
  *
  * Other sections run inline copies and don't call production. Copies of form code: the
- * delete-confirmation predicate, the save-button gate and the calendar-intent start and end in
- * [EventFormContent], and the occurrence start in [toFormDateFields]. The separate-pickers,
+ * save-button gate and the calendar-intent start and end in [EventFormContent], and the
+ * occurrence start in [toFormDateFields]. The separate-pickers,
  * midnight-crossing, end-time, date-range selection, range-highlight and cross-month, date-label
  * and multi-day end-time sections model picker logic with no production counterpart in the form.
  * The DateSelectionMode tests assert only enum values, the date-format tests only a multi-day
@@ -28,47 +28,6 @@ import org.onekash.kashcal.ui.components.pickers.DateSelectionMode
  * back.
  */
 class EventFormSheetTest {
-
-    // ========== Delete Button Confirmation Tests ==========
-
-    /**
-     * Copies the delete row's onToggle predicate in [EventFormContent]: the inline two-tap
-     * confirmation is skipped only when the host's scope sheet will appear, which happens only
-     * for a recurring master. Returns true when the inline confirmation must be shown.
-     */
-    private fun shouldShowInlineDeleteConfirm(
-        wasRecurringAtLoad: Boolean,
-        loadedIsDetachedException: Boolean
-    ): Boolean {
-        return !(wasRecurringAtLoad && !loadedIsDetachedException)
-    }
-
-    @Test
-    fun `delete on non-recurring event shows inline confirmation`() {
-        assertTrue(shouldShowInlineDeleteConfirm(
-            wasRecurringAtLoad = false,
-            loadedIsDetachedException = false
-        ))
-    }
-
-    @Test
-    fun `delete on recurring master skips inline confirmation - scope sheet confirms instead`() {
-        assertFalse(shouldShowInlineDeleteConfirm(
-            wasRecurringAtLoad = true,
-            loadedIsDetachedException = false
-        ))
-    }
-
-    @Test
-    fun `delete on exception event shows inline confirmation - scope sheet does NOT appear`() {
-        // An exception also has wasRecurringAtLoad=true (via originalEventId), but
-        // its delete goes straight to the single-occurrence delete without a scope
-        // sheet. Skipping the inline confirmation would make one tap delete it.
-        assertTrue(shouldShowInlineDeleteConfirm(
-            wasRecurringAtLoad = true,
-            loadedIsDetachedException = true
-        ))
-    }
 
     // ========== Occurrence Date Tests ==========
 

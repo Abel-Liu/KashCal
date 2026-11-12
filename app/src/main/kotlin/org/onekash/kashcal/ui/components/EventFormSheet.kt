@@ -45,7 +45,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
@@ -1205,7 +1204,6 @@ fun EventFormContent(
 
     // Form state
     var state by remember { mutableStateOf(EventFormState()) }
-    var showDeleteConfirmation by remember { mutableStateOf(false) }
 
     // Baseline captured when the form finishes loading; unsaved-change detection
     // diffs the live state against it. Null until the load effect seeds it.
@@ -2594,10 +2592,6 @@ fun EventFormContent(
                     // divider that stacks against the sticky Save divider.
                     HorizontalDivider(modifier = Modifier.testTag(TAG_DELETE_DIVIDER))
 
-                    // Deletes through the host's callback, after the inline
-                    // confirmation (one-off events and exceptions) or directly
-                    // for a recurring master, whose scope sheet is the
-                    // confirmation.
                     val commitDelete: () -> Unit = {
                         coroutineScope.launch {
                             state = state.copy(isSaving = true)
@@ -2617,7 +2611,6 @@ fun EventFormContent(
                                             isSaving = false,
                                             error = "Failed to delete: ${e.message}"
                                         )
-                                        showDeleteConfirmation = false
                                     }
                                 )
                             } catch (e: Exception) {
@@ -2626,79 +2619,21 @@ fun EventFormContent(
                                     isSaving = false,
                                     error = "Failed to delete: ${e.message}"
                                 )
-                                showDeleteConfirmation = false
                             }
                         }
                     }
-                    if (!showDeleteConfirmation) {
-                        EventFormRow(
-                            icon = Icons.Default.DeleteOutline,
-                            iconTint = MaterialTheme.colorScheme.error,
-                            iconContentDescription = stringResource(R.string.action_delete_event),
-                            onToggle = {
-                                if (wasRecurringAtLoad && !loadedIsDetachedException) {
-                                    // Recurring master: the host's scope
-                                    // sheet pick is the confirmation. An
-                                    // exception skips the sheet and
-                                    // deletes its occurrence directly, so
-                                    // it keeps the inline guard.
-                                    commitDelete()
-                                } else {
-                                    showDeleteConfirmation = true
-                                }
-                            },
-                            enabled = !state.isSaving
-                        ) {
-                            Text(
-                                stringResource(R.string.action_delete_event),
-                                style = MaterialTheme.typography.bodyLarge,
-                                color = MaterialTheme.colorScheme.error
-                            )
-                        }
-                    } else {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 16.dp, vertical = 8.dp),
-                            horizontalArrangement = Arrangement.spacedBy(12.dp)
-                        ) {
-                            OutlinedButton(
-                                onClick = { showDeleteConfirmation = false },
-                                enabled = !state.isSaving,
-                                modifier = Modifier.weight(1f)
-                            ) {
-                                Text(
-                                    stringResource(R.string.action_cancel),
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis,
-                                    textAlign = TextAlign.Center
-                                )
-                            }
-                            Button(
-                                onClick = { commitDelete() },
-                                enabled = !state.isSaving,
-                                modifier = Modifier.weight(1f),
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = MaterialTheme.colorScheme.error,
-                                    contentColor = MaterialTheme.colorScheme.onError
-                                )
-                            ) {
-                                if (state.isSaving) {
-                                    CircularProgressIndicator(
-                                        modifier = Modifier.size(20.dp),
-                                        strokeWidth = 2.dp,
-                                        color = MaterialTheme.colorScheme.onError
-                                    )
-                                } else {
-                                    Text(
-                                        stringResource(R.string.action_confirm),
-                                        maxLines = 1,
-                                        overflow = TextOverflow.Ellipsis,
-                                        textAlign = TextAlign.Center
-                                    )
-                                }
-                            }
-                        }
+                    EventFormRow(
+                        icon = Icons.Default.DeleteOutline,
+                        iconTint = MaterialTheme.colorScheme.error,
+                        iconContentDescription = stringResource(R.string.action_delete_event),
+                        onToggle = commitDelete,
+                        enabled = !state.isSaving
+                    ) {
+                        Text(
+                            stringResource(R.string.action_delete_event),
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.error
+                        )
                     }
                 }
 

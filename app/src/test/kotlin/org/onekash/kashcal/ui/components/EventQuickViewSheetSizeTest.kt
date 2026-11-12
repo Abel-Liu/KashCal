@@ -163,17 +163,12 @@ class EventQuickViewSheetSizeTest {
     }
 
     @Test
-    fun `a long one-off event's delete confirm shows on screen`() {
+    fun `a long one-off event deletes on the first tap`() {
         val calls = render(event(longTitle))
 
+        button(R.string.action_delete).assertFullyOnScreen()
         button(R.string.action_delete).performClick()
-        composeTestRule.waitForIdle()
-
-        composeTestRule.onNodeWithText(context.getString(R.string.action_cancel)).assertFullyOnScreen()
-        val confirm = composeTestRule.onNodeWithText(context.getString(R.string.action_confirm))
-        confirm.assertFullyOnScreen()
-        confirm.performClick()
-        assertEquals(1, calls.delete)
+        composeTestRule.runOnIdle { assertEquals(1, calls.delete) }
     }
 
     @Test

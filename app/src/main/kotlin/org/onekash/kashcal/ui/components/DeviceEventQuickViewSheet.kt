@@ -77,8 +77,7 @@ import org.onekash.kashcal.util.text.shouldOpenExternally
  * @param showEventEmojis whether to prefix an auto-detected emoji to the title
  * @param onEdit opens the edit form; for a series the host decides the scope at save
  * @param onEditOccurrence never called: no button in this sheet uses it
- * @param onDelete deletes the event. A one-off event asks for an inline confirmation first; a
- *   series occurrence calls it at once and the host resolves the scope.
+ * @param onDelete requests deletion. For a series occurrence, the host resolves the scope.
  * @param onDuplicate duplicates this event into a KashCal calendar
  * @param onShare shares the event details as text
  * @param onShareAsCard opens the share-as-card sheet (top-right icon)
@@ -349,7 +348,6 @@ fun DeviceEventQuickViewSheet(
 
             DeviceEventActionButtons(
                 canWrite = canWrite,
-                isRecurring = isRecurring,
                 onEdit = onEdit,
                 onEditOccurrence = onEditOccurrence,
                 onDelete = onDelete,
@@ -372,7 +370,6 @@ fun DeviceEventQuickViewSheet(
 @Composable
 private fun DeviceEventActionButtons(
     canWrite: Boolean,
-    isRecurring: Boolean,
     onEdit: () -> Unit,
     onEditOccurrence: () -> Unit,
     onDelete: () -> Unit,
@@ -381,7 +378,6 @@ private fun DeviceEventActionButtons(
     onExportIcs: () -> Unit
 ) {
     var showMoreMenu by remember { mutableStateOf(false) }
-    var showDeleteConfirmation by remember { mutableStateOf(false) }
 
     Row(
         modifier = Modifier
@@ -403,102 +399,68 @@ private fun DeviceEventActionButtons(
                 Text(stringResource(R.string.action_share))
             }
         } else {
-            // A one-off event takes an inline two-tap confirmation because the
-            // host deletes it at once. A series occurrence skips it: the host's
-            // scope sheet confirms an occurrence of the master, though an
-            // exception is deleted with no confirmation.
-            if (!showDeleteConfirmation) {
-                FilledTonalButton(
-                    onClick = onEdit,
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Text(stringResource(R.string.action_edit))
-                }
-
-                FilledTonalButton(
-                    onClick = {
-                        if (isRecurring) {
-                            onDelete()
-                        } else {
-                            showDeleteConfirmation = true
-                        }
-                    },
-                    modifier = Modifier.weight(1f),
-                    colors = ButtonDefaults.filledTonalButtonColors(
-                        containerColor = MaterialTheme.colorScheme.errorContainer,
-                        contentColor = MaterialTheme.colorScheme.onErrorContainer
-                    )
-                ) {
-                    Text(stringResource(R.string.action_delete))
-                }
-            } else {
-                FilledTonalButton(
-                    onClick = { showDeleteConfirmation = false },
-                    modifier = Modifier.weight(1f),
-                ) {
-                    Text(stringResource(R.string.action_cancel))
-                }
-                FilledTonalButton(
-                    onClick = {
-                        showDeleteConfirmation = false
-                        onDelete()
-                    },
-                    modifier = Modifier.weight(1f),
-                    colors = ButtonDefaults.filledTonalButtonColors(
-                        containerColor = MaterialTheme.colorScheme.error,
-                        contentColor = MaterialTheme.colorScheme.onError
-                    )
-                ) {
-                    Text(stringResource(R.string.action_confirm))
-                }
+            FilledTonalButton(
+                onClick = onEdit,
+                modifier = Modifier.weight(1f)
+            ) {
+                Text(stringResource(R.string.action_edit))
             }
 
-            if (!showDeleteConfirmation) {
-                Box {
-                    FilledTonalButton(
-                        onClick = { showMoreMenu = true }
-                    ) {
-                        Icon(
-                            Icons.Default.MoreVert,
-                            contentDescription = stringResource(R.string.cd_more_options)
-                        )
-                    }
+            FilledTonalButton(
+                onClick = onDelete,
+                modifier = Modifier.weight(1f),
+                colors = ButtonDefaults.filledTonalButtonColors(
+                    containerColor = MaterialTheme.colorScheme.errorContainer,
+                    contentColor = MaterialTheme.colorScheme.onErrorContainer
+                )
+            ) {
+                Text(stringResource(R.string.action_delete))
+            }
 
-                    DropdownMenu(
-                        expanded = showMoreMenu,
-                        onDismissRequest = { showMoreMenu = false }
-                    ) {
-                        DropdownMenuItem(
-                            text = { Text(stringResource(R.string.action_duplicate)) },
-                            onClick = {
-                                showMoreMenu = false
-                                onDuplicate()
-                            },
-                            leadingIcon = {
-                                Icon(Icons.Default.ContentCopy, contentDescription = stringResource(R.string.cd_duplicate))
-                            }
-                        )
-                        DropdownMenuItem(
-                            text = { Text(stringResource(R.string.action_share_as_text)) },
-                            onClick = {
-                                showMoreMenu = false
-                                onShare()
-                            },
-                            leadingIcon = {
-                                Icon(Icons.Default.Share, contentDescription = stringResource(R.string.cd_share))
-                            }
-                        )
-                        DropdownMenuItem(
-                            text = { Text(stringResource(R.string.action_export_ics)) },
-                            onClick = {
-                                showMoreMenu = false
-                                onExportIcs()
-                            },
-                            leadingIcon = {
-                                Icon(Icons.Default.FileDownload, contentDescription = stringResource(R.string.cd_export_ics))
-                            }
-                        )
-                    }
+            Box {
+                FilledTonalButton(
+                    onClick = { showMoreMenu = true }
+                ) {
+                    Icon(
+                        Icons.Default.MoreVert,
+                        contentDescription = stringResource(R.string.cd_more_options)
+                    )
+                }
+
+                DropdownMenu(
+                    expanded = showMoreMenu,
+                    onDismissRequest = { showMoreMenu = false }
+                ) {
+                    DropdownMenuItem(
+                        text = { Text(stringResource(R.string.action_duplicate)) },
+                        onClick = {
+                            showMoreMenu = false
+                            onDuplicate()
+                        },
+                        leadingIcon = {
+                            Icon(Icons.Default.ContentCopy, contentDescription = stringResource(R.string.cd_duplicate))
+                        }
+                    )
+                    DropdownMenuItem(
+                        text = { Text(stringResource(R.string.action_share_as_text)) },
+                        onClick = {
+                            showMoreMenu = false
+                            onShare()
+                        },
+                        leadingIcon = {
+                            Icon(Icons.Default.Share, contentDescription = stringResource(R.string.cd_share))
+                        }
+                    )
+                    DropdownMenuItem(
+                        text = { Text(stringResource(R.string.action_export_ics)) },
+                        onClick = {
+                            showMoreMenu = false
+                            onExportIcs()
+                        },
+                        leadingIcon = {
+                            Icon(Icons.Default.FileDownload, contentDescription = stringResource(R.string.cd_export_ics))
+                        }
+                    )
                 }
             }
         }
