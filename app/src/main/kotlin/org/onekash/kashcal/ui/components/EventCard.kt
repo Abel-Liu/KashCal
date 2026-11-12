@@ -24,6 +24,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import org.onekash.kashcal.R
 import org.onekash.kashcal.data.contacts.ContactEventTitleFormatter
@@ -45,6 +46,7 @@ internal fun EventCard(
     showEventEmojis: Boolean = true,
     timePattern: String = "h:mm a",
     attendees: List<org.onekash.kashcal.ui.components.attendees.AttendeeUiModel> = emptyList(),
+    verticalPadding: Dp = 12.dp,
     onClick: () -> Unit
 ) {
     val resources = LocalResources.current
@@ -75,7 +77,7 @@ internal fun EventCard(
                     .fillMaxHeight()
                     .background(leftStripeColor)
             )
-            Column(modifier = Modifier.padding(12.dp).weight(1f)) {
+            Column(modifier = Modifier.padding(horizontal = 12.dp, vertical = verticalPadding).weight(1f)) {
                 Text(
                     displayTitle,
                     style = MaterialTheme.typography.titleMedium,

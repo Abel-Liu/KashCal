@@ -2007,7 +2007,7 @@ private fun DayEventsPage(
                     .fillMaxSize()
                     .verticalScroll(rememberScrollState())
                     .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 events.forEach { displayEvent ->
                     val isPast = DateTimeUtils.isEventPast(
@@ -2029,6 +2029,7 @@ private fun DayEventsPage(
                         showEventEmojis = showEventEmojis,
                         timePattern = timePattern,
                         attendees = attendeeModels,
+                        verticalPadding = 8.dp,
                         onClick = {
                             when (displayEvent) {
                                 is DisplayEvent.Room -> onEventClick(displayEvent.event, displayEvent.occurrence.startTs)
@@ -2265,7 +2266,7 @@ private fun AgendaContent(
             state = listState,
             modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(AGENDA_CONTENT_PADDING),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
             model.groups.forEach { group ->
                 val displayDay = group.dayCode
@@ -2376,7 +2377,7 @@ private fun AgendaCard(
                     .fillMaxHeight()
                     .background(stripeColor)
             )
-            Column(modifier = Modifier.padding(12.dp).weight(1f)) {
+            Column(modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp).weight(1f)) {
                 Text(
                     displayTitle,
                     style = MaterialTheme.typography.titleMedium,
