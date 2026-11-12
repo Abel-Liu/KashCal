@@ -1617,8 +1617,6 @@ class MainActivity : FragmentActivity() {
                         },
                         contactsDeclined = contactsDeclined,
                         onDeclineContacts = { homeViewModel.declineContactSuggestions() },
-                        tagsAboveNotes = uiState.tagsAboveNotes,
-                        onSetTagsAboveNotes = { above -> homeViewModel.setTagsAboveNotes(above) }
                     )
                 }
 

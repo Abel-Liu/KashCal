@@ -27,9 +27,7 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.DeleteOutline
 import androidx.compose.material.icons.filled.EventAvailable
 import androidx.compose.material.icons.filled.Group
-import androidx.compose.material.icons.filled.LocalOffer
 import androidx.compose.material.icons.filled.LocationOn
-import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.Public
@@ -39,7 +37,6 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuAnchorType
@@ -48,7 +45,6 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.LocalMinimumInteractiveComponentSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.OutlinedButton
@@ -98,7 +94,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -195,7 +190,7 @@ internal fun shouldDismissKeyboardOnScroll(
  * Space above and below the section dividers, so it doesn't depend on which row
  * (EventFormRow at 14dp, picker rows at 8-12dp) sits against them.
  */
-private val SECTION_DIVIDER_SPACING = 4.dp
+private val SECTION_DIVIDER_SPACING = 2.dp
 
 /**
  * Whether the title-suggestion dropdown should appear: at least [MIN_TITLE_PREFIX]
@@ -942,8 +937,6 @@ fun EventFormSheet(
     onRequestContactsPermission: (() -> Unit)? = null,
     contactsDeclined: Boolean = false,
     onDeclineContacts: (() -> Unit)? = null,
-    tagsAboveNotes: Boolean = false,
-    onSetTagsAboveNotes: ((Boolean) -> Unit)? = null,
 ) {
     // Mirrored up from EventFormContent, which owns the form state, for the dismiss guard.
     var isSaving by remember { mutableStateOf(false) }
@@ -1033,8 +1026,6 @@ fun EventFormSheet(
             onRequestContactsPermission = onRequestContactsPermission,
             contactsDeclined = contactsDeclined,
             onDeclineContacts = onDeclineContacts,
-            tagsAboveNotes = tagsAboveNotes,
-            onSetTagsAboveNotes = onSetTagsAboveNotes,
         )
         }
     }
@@ -1194,10 +1185,6 @@ fun EventFormContent(
     contactsDeclined: Boolean = false,
     /** Persist a permanent decline of contact suggestions ("No thanks"). */
     onDeclineContacts: (() -> Unit)? = null,
-    /** True when the tag row renders above notes; otherwise it sits below them. */
-    tagsAboveNotes: Boolean = false,
-    /** Persist a new tag-row position (above or below notes). */
-    onSetTagsAboveNotes: ((Boolean) -> Unit)? = null,
     /**
      * Whether the host has finished its open animation. The title auto-focus, and the
      * keyboard it raises, waits for it so the keyboard doesn't rise mid-entrance.
@@ -1856,7 +1843,7 @@ fun EventFormContent(
                     .weight(1f)
                     .padding(horizontal = 8.dp)
                     .semantics { heading() },
-                style = MaterialTheme.typography.titleLarge,
+                style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
                 textAlign = TextAlign.Center,
                 maxLines = 1,
@@ -1961,7 +1948,7 @@ fun EventFormContent(
                     // clip-prone disabled field with autocomplete chrome.
                     Text(
                         text = state.title,
-                        style = MaterialTheme.typography.titleLarge,
+                        style = MaterialTheme.typography.titleMedium,
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(horizontal = 16.dp, vertical = 8.dp),
@@ -2002,7 +1989,7 @@ fun EventFormContent(
                                 }
                             }
                         },
-                        placeholder = { Text(stringResource(R.string.label_event_title), style = MaterialTheme.typography.titleLarge) },
+                        placeholder = { Text(stringResource(R.string.label_event_title), style = MaterialTheme.typography.titleMedium) },
                         modifier = fieldGestureMarker
                             .fillMaxWidth()
                             .testTag(TAG_TITLE_FIELD)
@@ -2018,7 +2005,7 @@ fun EventFormContent(
                         // length cap.
                         maxLines = 4,
                         enabled = !isReadOnly,
-                        textStyle = MaterialTheme.typography.titleLarge,
+                        textStyle = MaterialTheme.typography.titleMedium,
                         keyboardOptions = KeyboardOptions(
                             capitalization = KeyboardCapitalization.Sentences
                         ),
@@ -2095,7 +2082,8 @@ fun EventFormContent(
                 if (shouldShowReadOnlyOptionalField(state.location, isReadOnly)) {
                 EventFormRow(
                     icon = Icons.Default.LocationOn,
-                    iconContentDescription = stringResource(R.string.label_location)
+                    iconContentDescription = stringResource(R.string.label_location),
+                    verticalPadding = 4.dp,
                 ) {
                     if (isReadOnly) {
                         Text(
@@ -2381,92 +2369,11 @@ fun EventFormContent(
 
                 HorizontalDivider(modifier = Modifier.padding(vertical = SECTION_DIVIDER_SPACING))
 
-                // The tag row sits above or below notes, a saved preference the user
-                // flips from its ⋮ menu. Defined once, rendered in the chosen position.
-                var showTagsMenu by remember { mutableStateOf(false) }
-                val tagsRow: @Composable () -> Unit = {
-                    EventFormRow(
-                        icon = Icons.Default.LocalOffer,
-                        iconContentDescription = stringResource(R.string.label_categories),
-                        // Top-aligned so the icon and the ⋮ stay by the chip
-                        // line when the picker's field and suggestion list open.
-                        // The offset centers the icon on the resting chip row.
-                        verticalAlignment = Alignment.Top,
-                        iconTopPadding = 6.dp,
-                    ) {
-                        org.onekash.kashcal.ui.components.category.TagChipRow(
-                            selected = state.categories.toSet(),
-                            suggestions = categorySuggestions,
-                            onToggle = { tag ->
-                                val current = state.categories
-                                state = if (current.any { it.equals(tag, ignoreCase = true) }) {
-                                    state.copy(categories = current.filterNot { it.equals(tag, ignoreCase = true) }, categoriesEdited = true)
-                                } else {
-                                    state.copy(categories = current + tag, categoriesEdited = true)
-                                }
-                            },
-                            onAdd = { tag ->
-                                if (state.categories.none { it.equals(tag, ignoreCase = true) }) {
-                                    state = state.copy(categories = state.categories + tag, categoriesEdited = true)
-                                }
-                            },
-                            modifier = Modifier.weight(1f),
-                        )
-                        if (onSetTagsAboveNotes != null) {
-                            // Matches the left icon (24dp glyph, 6dp top offset)
-                            // so the ⋮ sits on the chip line, not low in a 48dp
-                            // button box.
-                            Box(modifier = Modifier.padding(top = 6.dp)) {
-                                CompositionLocalProvider(
-                                    LocalMinimumInteractiveComponentSize provides Dp.Unspecified
-                                ) {
-                                IconButton(
-                                    onClick = { showTagsMenu = true },
-                                    modifier = Modifier.size(24.dp),
-                                ) {
-                                    Icon(
-                                        Icons.Default.MoreVert,
-                                        contentDescription = stringResource(R.string.cd_tags_move_menu),
-                                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    )
-                                }
-                                }
-                                DropdownMenu(
-                                    expanded = showTagsMenu,
-                                    onDismissRequest = { showTagsMenu = false },
-                                ) {
-                                    // The current position's item is disabled.
-                                    DropdownMenuItem(
-                                        text = { Text(stringResource(R.string.tags_move_above_notes)) },
-                                        enabled = !tagsAboveNotes,
-                                        onClick = {
-                                            onSetTagsAboveNotes(true)
-                                            showTagsMenu = false
-                                        },
-                                    )
-                                    DropdownMenuItem(
-                                        text = { Text(stringResource(R.string.tags_move_below_notes)) },
-                                        enabled = tagsAboveNotes,
-                                        onClick = {
-                                            onSetTagsAboveNotes(false)
-                                            showTagsMenu = false
-                                        },
-                                    )
-                                }
-                            }
-                        }
-                    }
-                }
-
-                val showTagRow = !isReadOnly && !state.isEditMode
-                if (showTagRow && tagsAboveNotes) {
-                    tagsRow()
-                }
-
                 if (shouldShowReadOnlyOptionalField(state.description, isReadOnly)) {
                 EventFormRow(
                     icon = Icons.AutoMirrored.Filled.Notes,
                     iconContentDescription = stringResource(R.string.label_notes),
+                    verticalPadding = 4.dp,
                     // Multi-line field: the icon is top-aligned and offset by the
                     // field's top padding so it meets the first line of text.
                     verticalAlignment = Alignment.Top,
@@ -2484,7 +2391,6 @@ fun EventFormContent(
                         onValueChange = { state = state.copy(description = it) },
                         placeholder = { Text(stringResource(R.string.label_notes)) },
                         modifier = fieldGestureMarker.fillMaxWidth(),
-                        minLines = 2,
                         maxLines = 4,
                         enabled = !isReadOnly,
                         colors = OutlinedTextFieldDefaults.colors(
@@ -2498,16 +2404,7 @@ fun EventFormContent(
                 }
                 }
 
-                // Default position: below notes, keeping notes and tags together
-                // above attendees and free/busy.
-                if (showTagRow && !tagsAboveNotes) {
-                    tagsRow()
-                }
-
-                // Separates notes and tags from attendees and free/busy. Drawn only
-                // when that group rendered something: in the read-only view with
-                // blank notes it is empty, and the divider would stack against the
-                // section divider above.
+                // Separate notes from scheduling when the notes row is visible.
                 if (!isReadOnly || state.description.isNotBlank()) {
                     HorizontalDivider(
                         modifier = Modifier
@@ -2860,7 +2757,7 @@ fun EventFormContent(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(16.dp))
             }
             }
 

@@ -159,7 +159,6 @@ class EventFormSheetDuplicateTest {
                     onSave = { onCapture(it); Result.success(savedEvent) },
                     onQueryContacts = { emptyList<ContactEmail>() },
                     isSchedulable = true,
-                    onSetTagsAboveNotes = {},
                 )
             }
         }
@@ -260,7 +259,6 @@ class EventFormSheetDuplicateTest {
                     onSave = { captured = it; Result.success(savedEvent) },
                     onQueryContacts = { emptyList<ContactEmail>() },
                     isSchedulable = true,
-                    onSetTagsAboveNotes = {},
                     onHasChangesChange = { reportedChanges = it },
                 )
             }

@@ -69,7 +69,6 @@ class EventFormReminderLoadTest {
                     onSave = { Result.success(event) },
                     onQueryContacts = { emptyList<ContactEmail>() },
                     isSchedulable = true,
-                    onSetTagsAboveNotes = {},
                 )
             }
         }

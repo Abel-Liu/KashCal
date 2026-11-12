@@ -55,13 +55,14 @@ fun EventFormRow(
     showExpandIcon: Boolean = false,
     onToggle: (() -> Unit)? = null,
     enabled: Boolean = true,
-    // Single-line rows stay centered. A row with tall content (Notes, the tag row) passes Top
+    // Single-line rows stay centered. A row with tall content (such as Notes) passes Top
     // so the icon lines up with the first line instead of floating to the middle.
     verticalAlignment: Alignment.Vertical = Alignment.CenterVertically,
     // Extra top offset for the icon when [verticalAlignment] is Top. Tall rows start their
     // first line at different depths (a text field has internal top padding, a chip row is
     // centered in a taller box), so each sets its own. Ignored when centered.
     iconTopPadding: Dp = 0.dp,
+    verticalPadding: Dp = 12.dp,
     expandedContent: (@Composable () -> Unit)? = null,
     content: @Composable RowScope.() -> Unit
 ) {
@@ -74,7 +75,7 @@ fun EventFormRow(
                         Modifier.clickable { onToggle() }
                     else Modifier
                 )
-                .padding(horizontal = 16.dp, vertical = 12.dp),
+                .padding(horizontal = 16.dp, vertical = verticalPadding),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalAlignment = verticalAlignment
         ) {

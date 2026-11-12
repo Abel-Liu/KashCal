@@ -106,7 +106,6 @@ class EventFormAutoFocusTest {
                     onSave = { Result.success(eventWithTitle("Saved")) },
                     onQueryContacts = { emptyList<ContactEmail>() },
                     isSchedulable = true,
-                    onSetTagsAboveNotes = {},
                 )
             }
         }
@@ -171,7 +170,6 @@ class EventFormAutoFocusTest {
                     onSave = { Result.success(eventWithTitle("Saved")) },
                     onQueryContacts = { emptyList<ContactEmail>() },
                     isSchedulable = true,
-                    onSetTagsAboveNotes = {},
                     isHostSheetSettled = settled.value,
                 )
             }
