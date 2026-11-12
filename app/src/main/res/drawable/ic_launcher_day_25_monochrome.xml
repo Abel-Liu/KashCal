@@ -1,10 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Generated themed layer for day 25: outlined calendar card with binding tabs and the day number. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp"
     android:height="108dp"
     android:viewportWidth="88"
     android:viewportHeight="88">
-    <group android:translateX="44" android:translateY="42.5" android:scaleX="1.5" android:scaleY="1.5">
-        <path android:fillColor="#FFFFFF" android:pathData="M-0.726 9H-11.704V6.69L-7.766 2.708Q-6.578 1.476 -5.852 0.651Q-5.126 -0.174 -4.796 -0.845Q-4.466 -1.516 -4.466 -2.286Q-4.466 -3.232 -4.983 -3.694Q-5.5 -4.156 -6.38 -4.156Q-7.282 -4.156 -8.14 -3.738Q-8.998 -3.32 -9.944 -2.55L-11.748 -4.684Q-11.066 -5.278 -10.307 -5.784Q-9.548 -6.29 -8.547 -6.609Q-7.546 -6.928 -6.138 -6.928Q-4.598 -6.928 -3.487 -6.367Q-2.376 -5.806 -1.771 -4.849Q-1.166 -3.892 -1.166 -2.682Q-1.166 -1.384 -1.683 -0.306Q-2.2 0.772 -3.179 1.828Q-4.158 2.884 -5.544 4.16L-7.568 6.052V6.206H-0.726ZM6.6 -1.032Q8.03 -1.032 9.152 -0.482Q10.274 0.068 10.923 1.124Q11.572 2.18 11.572 3.742Q11.572 5.436 10.868 6.668Q10.164 7.9 8.767 8.56Q7.37 9.22 5.302 9.22Q4.07 9.22 2.981 9Q1.892 8.78 1.078 8.362V5.502Q1.892 5.92 3.036 6.217Q4.18 6.514 5.192 6.514Q6.182 6.514 6.853 6.25Q7.524 5.986 7.876 5.436Q8.228 4.886 8.228 4.028Q8.228 2.862 7.458 2.257Q6.688 1.652 5.082 1.652Q4.466 1.652 3.806 1.773Q3.146 1.894 2.706 2.004L1.386 1.3L1.98 -6.708H10.494V-3.892H4.884L4.598 -0.812Q4.972 -0.878 5.401 -0.955Q5.83 -1.032 6.6 -1.032Z" />
+    <group android:translateX="44" android:translateY="44" android:scaleX="0.9" android:scaleY="0.9" android:rotation="-2">
+        <path android:strokeColor="#FFFFFF" android:strokeWidth="3.5" android:strokeLineCap="round" android:strokeLineJoin="round" android:pathData="M-12,-17H12A6,6 0 0 1 18,-11V15A6,6 0 0 1 12,21H-12A6,6 0 0 1 -18,15V-11A6,6 0 0 1 -12,-17Z" />
+        <path android:strokeColor="#FFFFFF" android:strokeWidth="3.5" android:strokeLineCap="round" android:strokeLineJoin="round" android:pathData="M-9,-23V-12" />
+        <path android:strokeColor="#FFFFFF" android:strokeWidth="3.5" android:strokeLineCap="round" android:strokeLineJoin="round" android:pathData="M9,-23V-12" />
+        <path android:fillColor="#FFFFFF" android:pathData="M-0.726 12.354H-11.704V10.044L-7.766 6.062Q-6.578 4.83 -5.852 4.005Q-5.126 3.18 -4.796 2.509Q-4.466 1.838 -4.466 1.068Q-4.466 0.122 -4.983 -0.34Q-5.5 -0.802 -6.38 -0.802Q-7.282 -0.802 -8.14 -0.384Q-8.998 0.034 -9.944 0.804L-11.748 -1.33Q-11.066 -1.924 -10.307 -2.43Q-9.548 -2.936 -8.547 -3.255Q-7.546 -3.574 -6.138 -3.574Q-4.598 -3.574 -3.487 -3.013Q-2.376 -2.452 -1.771 -1.495Q-1.166 -0.538 -1.166 0.672Q-1.166 1.97 -1.683 3.048Q-2.2 4.126 -3.179 5.182Q-4.158 6.238 -5.544 7.514L-7.568 9.406V9.56H-0.726ZM6.6 2.322Q8.03 2.322 9.152 2.872Q10.274 3.422 10.923 4.478Q11.572 5.534 11.572 7.096Q11.572 8.79 10.868 10.022Q10.164 11.254 8.767 11.914Q7.37 12.574 5.302 12.574Q4.07 12.574 2.981 12.354Q1.892 12.134 1.078 11.716V8.856Q1.892 9.274 3.036 9.571Q4.18 9.868 5.192 9.868Q6.182 9.868 6.853 9.604Q7.524 9.34 7.876 8.79Q8.228 8.24 8.228 7.382Q8.228 6.216 7.458 5.611Q6.688 5.006 5.082 5.006Q4.466 5.006 3.806 5.127Q3.146 5.248 2.706 5.358L1.386 4.654L1.98 -3.354H10.494V-0.538H4.884L4.598 2.542Q4.972 2.476 5.401 2.399Q5.83 2.322 6.6 2.322Z" />
     </group>
 </vector>
