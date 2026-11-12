@@ -43,6 +43,12 @@ class DateIconRefresher internal constructor(
     /** Moves the date icon to [today] when it may; logs and swallows any failure. */
     fun refresh(today: LocalDate = LocalDate.now()) {
         try {
+            TodayDateShortcut.refresh(context, today)
+        } catch (e: Exception) {
+            Log.w(TAG, "Today shortcut refresh failed", e)
+        }
+
+        try {
             AppIconUtility(context).refreshDateIcon(today, ::canSwitch)
         } catch (e: Exception) {
             Log.e(TAG, "Date icon refresh failed", e)

@@ -8,6 +8,14 @@ import org.junit.Test
 
 class ChineseLunarDateTest {
     @Test
+    fun fullDateIncludesMonthAndDayForTheShortcut() {
+        assertEquals("十月初四", chineseLunarFullDate(LocalDate.of(2026, 11, 12)))
+        assertEquals("正月初一", chineseLunarFullDate(LocalDate.of(2027, 2, 6)))
+        assertEquals("闰六月初一", chineseLunarFullDate(LocalDate.of(2025, 7, 25)))
+        assertNull(chineseLunarFullDate(LocalDate.of(2101, 1, 1)))
+    }
+
+    @Test
     fun matchesEveryDateInThePublishedTable() {
         val digest = MessageDigest.getInstance("SHA-256")
         val end = LocalDate.of(2101, 1, 1)

@@ -35,9 +35,7 @@ internal fun chineseLunarLabel(date: LocalDate, showFestivals: Boolean = false):
     if (date.year !in 1901..2100) return null
 
     val epochDay = date.toEpochDay()
-    val searchResult = lunarMonthStarts.binarySearchBy(epochDay) { it.epochDay }
-    // For a non-start date, the insertion point is one past the current lunar month.
-    val index = if (searchResult >= 0) searchResult else -searchResult - 2
+    val index = lunarMonthIndex(epochDay)
     val monthStart = lunarMonthStarts[index]
     val day = (epochDay - monthStart.epochDay).toInt() + 1
     val month = monthStart.month
@@ -60,6 +58,24 @@ internal fun chineseLunarLabel(date: LocalDate, showFestivals: Boolean = false):
     }
 
     if (day != 1) return lunarDays[day - 1]
+    return lunarMonthLabel(month)
+}
+
+/** The month and day together, for surfaces that only show one Gregorian date. */
+internal fun chineseLunarFullDate(date: LocalDate): String? {
+    if (date.year !in 1901..2100) return null
+    val epochDay = date.toEpochDay()
+    val monthStart = lunarMonthStarts[lunarMonthIndex(epochDay)]
+    return lunarMonthLabel(monthStart.month) + lunarDays[(epochDay - monthStart.epochDay).toInt()]
+}
+
+private fun lunarMonthIndex(epochDay: Long): Int {
+    val searchResult = lunarMonthStarts.binarySearchBy(epochDay) { it.epochDay }
+    // For a non-start date, the insertion point is one past the current lunar month.
+    return if (searchResult >= 0) searchResult else -searchResult - 2
+}
+
+private fun lunarMonthLabel(month: Int): String {
     val label = lunarMonths[abs(month) - 1]
     return if (month < 0) "闰$label" else label
 }

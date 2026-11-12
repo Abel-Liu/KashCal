@@ -182,6 +182,8 @@
     <string name="app_icon_supporter">支持者</string>
     <string name="app_icon_supporter_calendar">支持者（标为“日历”）</string>
     <string name="app_icon_todays_date">今天的日期</string>
+    <string name="app_icon_today_shortcut_hint">添加到桌面</string>
+    <string name="app_icon_today_shortcut_error">无法添加或更新桌面快捷方式。</string>
     <string name="app_icon_label_calendar">日历</string>
     <string name="app_icon_support_cta">支持开序历</string>
     <string name="app_icon_switch_note">更改图标可能会重启应用。通知始终使用默认图标和名称。</string>

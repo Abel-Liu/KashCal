@@ -1,5 +1,6 @@
 package org.onekash.kashcal.ui.screens.settings
 
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -30,11 +31,15 @@ import androidx.compose.material3.SheetState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -43,14 +48,19 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import org.onekash.kashcal.R
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.onekash.kashcal.ui.appicon.AppIconPreset
+import org.onekash.kashcal.ui.appicon.TodayDateShortcut
+import org.onekash.kashcal.ui.appicon.renderTodayDateIcon
 import java.time.LocalDate
 
 /** The heart color of the supporter launcher icon, reused for the donate cue in the sheet. */
 private val SupporterHeartRed = Color(0xFFD6304A)
 
 /**
- * Shows the launcher icon picker; picking a row calls [onPresetSelect] and then [onDismiss].
+ * Shows launcher icon choices and a row to pin the dynamic today shortcut.
  *
  * Layout: the icon options as one uninterrupted list, a divider, a "Support KashCal" footer link
  * (the honor-system nudge tied to the supporter icons), and an inline note on what switching
@@ -65,7 +75,10 @@ fun AppIconSheet(
     onSupportClick: () -> Unit,
     onDismiss: () -> Unit,
 ) {
-    // The date icon's row previews today's number; read once for the sheet's lifetime.
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val shortcutError = stringResource(R.string.app_icon_today_shortcut_error)
+    // Preview the shortcut for the day the sheet opened.
     val today = remember { LocalDate.now() }
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -95,8 +108,18 @@ fun AppIconSheet(
                     today = today,
                     isSelected = currentPreset == preset,
                     onSelect = {
-                        onPresetSelect(preset)
-                        onDismiss()
+                        if (preset == AppIconPreset.TODAYS_DATE) {
+                            scope.launch {
+                                val added = withContext(Dispatchers.IO) {
+                                    runCatching { TodayDateShortcut.addOrRefresh(context) }.getOrDefault(false)
+                                }
+                                if (added) onDismiss()
+                                else Toast.makeText(context, shortcutError, Toast.LENGTH_SHORT).show()
+                            }
+                        } else {
+                            onPresetSelect(preset)
+                            onDismiss()
+                        }
                     },
                 )
             }
@@ -175,14 +198,18 @@ private fun AppIconOptionRow(
     isSelected: Boolean,
     onSelect: () -> Unit,
 ) {
+    val isShortcut = preset == AppIconPreset.TODAYS_DATE
+    val interaction = if (isShortcut) {
+        Modifier.clickable(role = Role.Button, onClick = onSelect)
+    } else {
+        Modifier.selectable(selected = isSelected, role = Role.RadioButton, onClick = onSelect)
+    }
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            // Radio-button role + selected state so TalkBack announces the choice and its
-            // group position, not just the label (the checkmark alone is a sighted-only cue).
-            .selectable(selected = isSelected, role = Role.RadioButton, onClick = onSelect)
+            .then(interaction)
             .background(
-                if (isSelected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
+                if (isSelected && !isShortcut) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
                 else Color.Transparent,
             )
             .padding(horizontal = 24.dp, vertical = 12.dp),
@@ -199,24 +226,42 @@ private fun AppIconOptionRow(
                 modifier = Modifier
                     .size(44.dp)
                     .clip(RoundedCornerShape(10.dp))
-                    .background(colorResource(R.color.ic_launcher_background)),
+                    .background(
+                        colorResource(
+                            if (isShortcut) R.color.ic_launcher_date_background
+                            else R.color.ic_launcher_background
+                        )
+                    ),
                 contentAlignment = Alignment.Center,
             ) {
-                Image(
-                    painter = painterResource(preset.previewForegroundFor(today)),
-                    contentDescription = null,
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .scale(AppIconPreset.PREVIEW_FOREGROUND_SCALE),
-                )
+                val iconModifier = Modifier
+                    .fillMaxSize()
+                    .scale(AppIconPreset.PREVIEW_FOREGROUND_SCALE)
+                if (isShortcut) {
+                    val locale = LocalConfiguration.current.locales[0]
+                    val bitmap = remember(today, locale) { renderTodayDateIcon(today, locale).asImageBitmap() }
+                    Image(bitmap = bitmap, contentDescription = null, modifier = iconModifier)
+                } else {
+                    Image(
+                        painter = painterResource(preset.previewForegroundFor(today)),
+                        contentDescription = null,
+                        modifier = iconModifier,
+                    )
+                }
             }
             Spacer(modifier = Modifier.width(16.dp))
-            Text(
-                text = stringResource(preset.labelRes),
-                style = MaterialTheme.typography.bodyLarge,
-            )
+            Column {
+                Text(text = stringResource(preset.labelRes), style = MaterialTheme.typography.bodyLarge)
+                if (isShortcut) {
+                    Text(
+                        text = stringResource(R.string.app_icon_today_shortcut_hint),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
         }
-        if (isSelected) {
+        if (isSelected && !isShortcut) {
             Icon(
                 imageVector = Icons.Default.Check,
                 // Decorative: the row's radio-button selected state already announces selection.

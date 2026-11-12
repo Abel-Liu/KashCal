@@ -367,7 +367,7 @@ private fun DateIconArt(timePattern: String, now: Long, play: Boolean, rest: Her
                     modifier = Modifier
                         .size(80.dp)
                         .clip(CircleShape)
-                        .background(colorResource(R.color.ic_launcher_background)),
+                        .background(colorResource(R.color.ic_launcher_date_background)),
                 ) {
                     AnimatedContent(
                         targetState = if (turned) todayDay else yesterday,

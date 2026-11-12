@@ -178,9 +178,8 @@ class PickerSheetSelectableSemanticsTest {
                 )
             }
         }
-        // radioCount = 5 (the five icon rows) asserts the "Support KashCal" footer (a Role.Button
-        // action row) and the info note aren't radios.
-        assertRadioGroupSemantics(selectedLabel = "Default", unselectedLabel = "Supporter", radioCount = 5)
+        // Four launcher presets are radios. Today and Support are actions.
+        assertRadioGroupSemantics(selectedLabel = "Default", unselectedLabel = "Supporter", radioCount = 4)
         composeTestRule.onNodeWithText("Support KashCal")
             .assert(SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.Button))
         composeTestRule.onNodeWithText("Supporter").performClick()
@@ -189,22 +188,21 @@ class PickerSheetSelectableSemanticsTest {
 
     @OptIn(ExperimentalMaterial3Api::class)
     @Test
-    fun `the date icon is a radio row that reports its preset and shows as selected`() {
-        var picked: AppIconPreset? = null
+    fun `today is a shortcut action rather than an app icon radio choice`() {
         composeTestRule.setContent {
             MaterialTheme {
                 AppIconSheet(
                     sheetState = rememberModalBottomSheetState(),
-                    currentPreset = AppIconPreset.TODAYS_DATE,
-                    onPresetSelect = { picked = it },
+                    currentPreset = AppIconPreset.DEFAULT,
+                    onPresetSelect = {},
                     onSupportClick = {},
                     onDismiss = {},
                 )
             }
         }
-        assertRadioGroupSemantics(selectedLabel = "Today's date", unselectedLabel = "Default", radioCount = 5)
-        composeTestRule.onNodeWithText("Today's date").performClick()
-        assertEquals(AppIconPreset.TODAYS_DATE, picked)
+        assertRadioGroupSemantics(selectedLabel = "Default", unselectedLabel = "Supporter", radioCount = 4)
+        composeTestRule.onNodeWithText("Today's date")
+            .assert(SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.Button))
     }
 
     @OptIn(ExperimentalMaterial3Api::class)
@@ -222,7 +220,7 @@ class PickerSheetSelectableSemanticsTest {
                 )
             }
         }
-        assertRadioGroupSemantics(selectedLabel = "Kash", unselectedLabel = "Default", radioCount = 5)
+        assertRadioGroupSemantics(selectedLabel = "Kash", unselectedLabel = "Default", radioCount = 4)
         composeTestRule.onNodeWithText("Default").performClick()
         assertEquals(AppIconPreset.DEFAULT, picked)
     }

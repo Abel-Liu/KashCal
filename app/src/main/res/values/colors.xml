@@ -2,6 +2,7 @@
 <resources>
     <!-- Launcher icon background -->
     <color name="ic_launcher_background">#020727</color>
+    <color name="ic_launcher_date_background">#FAFAFC</color>
 
     <!--
         Colors for the widget placeholder layout. That layout is plain RemoteViews, so it
