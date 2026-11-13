@@ -9,6 +9,7 @@ import androidx.work.WorkManager
 import androidx.work.WorkerFactory
 import dagger.hilt.android.HiltAndroidApp
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.onekash.icaldav.model.ICalDateTime
@@ -34,6 +35,7 @@ import org.onekash.kashcal.sync.scheduler.IcsRefreshScheduleReconciler
 import org.onekash.kashcal.sync.scheduler.SyncScheduler
 import org.onekash.kashcal.ui.appicon.DateIconRefresher
 import org.onekash.kashcal.ui.appicon.ForegroundActivityTracker
+import org.onekash.kashcal.ui.appicon.TodayDateShortcut
 import org.onekash.kashcal.util.JobSchedulerIds
 import org.onekash.kashcal.widget.WidgetPreviewRegistrar
 import org.onekash.kashcal.widget.WidgetUpdateManager
@@ -49,6 +51,13 @@ import javax.inject.Inject
  */
 @HiltAndroidApp
 class KashCalApplication : Application(), Configuration.Provider {
+
+    override fun onConfigurationChanged(newConfig: android.content.res.Configuration) {
+        super.onConfigurationChanged(newConfig)
+        if (!isUnitTestEnvironment()) {
+            applicationScope.launch(Dispatchers.IO) { TodayDateShortcut.refresh(this@KashCalApplication) }
+        }
+    }
 
     companion object {
         private const val TAG = "KashCalApplication"

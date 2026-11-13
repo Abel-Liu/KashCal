@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <color name="ic_launcher_date_background">#151827</color>
     <!--
         Dark-launcher variants of the widget placeholder colors. Without these the
         placeholder renders a light panel with dark text on a dark launcher.

@@ -55,6 +55,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.onekash.kashcal.ui.appicon.AppIconPreset
 import org.onekash.kashcal.ui.appicon.TodayDateShortcut
+import org.onekash.kashcal.ui.appicon.isDateIconDark
 import org.onekash.kashcal.ui.appicon.renderTodayDateIcon
 import java.time.LocalDate
 
@@ -247,8 +248,12 @@ private fun AppIconOptionRow(
                     .fillMaxSize()
                     .scale(AppIconPreset.PREVIEW_FOREGROUND_SCALE)
                 if (isShortcut) {
-                    val locale = LocalConfiguration.current.locales[0]
-                    val bitmap = remember(today, locale) { renderTodayDateIcon(today, locale).asImageBitmap() }
+                    val configuration = LocalConfiguration.current
+                    val locale = configuration.locales[0]
+                    val dark = configuration.isDateIconDark()
+                    val bitmap = remember(today, locale, dark) {
+                        renderTodayDateIcon(today, locale, dark).asImageBitmap()
+                    }
                     Image(bitmap = bitmap, contentDescription = null, modifier = iconModifier)
                 } else {
                     Image(
