@@ -17,6 +17,9 @@ import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import org.onekash.kashcal.ui.appicon.TodayDateShortcut
 import org.onekash.kashcal.util.AlarmArming
 import java.io.IOException
 import java.time.LocalDate
@@ -188,6 +191,8 @@ class WidgetUpdateWorker(
 
     override suspend fun doWork(): Result {
         Log.d(TAG, "WidgetUpdateWorker running")
+        // Catch up after a missed midnight refresh, even if there are no widgets installed.
+        withContext(Dispatchers.IO) { TodayDateShortcut.refresh(applicationContext) }
         return try {
             refreshAllWidgets(applicationContext)
             Result.success()

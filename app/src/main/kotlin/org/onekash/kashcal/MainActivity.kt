@@ -40,6 +40,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
@@ -64,6 +65,7 @@ import org.onekash.kashcal.domain.model.toEventForShareCard
 import org.onekash.kashcal.reminder.device.DeviceCalendarReminderNotificationManager
 import org.onekash.kashcal.reminder.notification.ReminderNotificationManager
 import org.onekash.kashcal.sync.notification.ChangeNotifier
+import org.onekash.kashcal.ui.appicon.TodayDateShortcut
 import org.onekash.kashcal.ui.components.AboutSheet
 import org.onekash.kashcal.ui.components.category.LocalTagColors
 import org.onekash.kashcal.ui.components.DeviceEventQuickViewSheet
@@ -2088,6 +2090,7 @@ class MainActivity : FragmentActivity() {
 
     override fun onResume() {
         super.onResume()
+        lifecycleScope.launch(Dispatchers.IO) { TodayDateShortcut.refresh(applicationContext) }
         Log.d(TAG, "onResume, isFirstResume=$isFirstResume, returningFromInternal=$returningFromInternalActivity")
 
         if (!isFirstResume) {

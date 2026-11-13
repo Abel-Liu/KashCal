@@ -9,6 +9,7 @@ import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.Typeface
 import android.graphics.drawable.Icon
+import android.util.Log
 import org.onekash.kashcal.MainActivity
 import org.onekash.kashcal.R
 import org.onekash.kashcal.ui.util.chineseLunarFullDate
@@ -33,10 +34,16 @@ internal object TodayDateShortcut {
     }
 
     @Synchronized
-    fun refresh(context: Context, date: LocalDate) {
-        val manager = context.getSystemService(ShortcutManager::class.java) ?: return
-        val key = date to context.resources.configuration.locales[0]
-        if (lastUpdate != key && manager.isPinned()) update(context, manager, date)
+    fun refresh(context: Context, date: LocalDate = LocalDate.now()) {
+        try {
+            val manager = context.getSystemService(ShortcutManager::class.java) ?: return
+            val key = date to context.resources.configuration.locales[0]
+            if (lastUpdate != key && manager.isPinned() && !update(context, manager, date)) {
+                Log.d("TodayDateShortcut", "Shortcut update deferred until the next refresh")
+            }
+        } catch (e: RuntimeException) {
+            Log.w("TodayDateShortcut", "Shortcut refresh failed", e)
+        }
     }
 
     private fun ShortcutManager.isPinned() = pinnedShortcuts.any { it.id == TODAY_DATE_SHORTCUT_ID }
