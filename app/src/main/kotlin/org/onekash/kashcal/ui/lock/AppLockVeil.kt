@@ -50,14 +50,14 @@ fun AppLockVeil(
     onUnlock: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val iconBackground = colorResource(id = R.color.ic_launcher_background)
+    val iconBackground = colorResource(id = R.color.ic_launcher_date_background)
     Box(
         modifier = modifier
             .fillMaxSize()
             // Swallows taps and gestures so the veiled calendar can't be touched.
             .pointerInput(Unit) {}
             .background(
-                // Navy shades darker than [iconBackground], so the icon tile stands out.
+                // The navy backdrop keeps the light icon tile distinct.
                 Brush.radialGradient(
                     colors = listOf(Color(0xFF01051E), Color(0xFF010316), Color(0xFF00020E)),
                 )

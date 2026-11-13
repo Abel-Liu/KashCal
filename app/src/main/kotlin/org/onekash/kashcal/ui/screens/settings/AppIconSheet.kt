@@ -237,7 +237,7 @@ private fun AppIconOptionRow(
                     .clip(RoundedCornerShape(10.dp))
                     .background(
                         colorResource(
-                            if (isShortcut) R.color.ic_launcher_date_background
+                            if (isShortcut || preset == AppIconPreset.DEFAULT) R.color.ic_launcher_date_background
                             else R.color.ic_launcher_background
                         )
                     ),

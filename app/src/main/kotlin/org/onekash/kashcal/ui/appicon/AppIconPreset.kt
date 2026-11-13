@@ -65,7 +65,7 @@ enum class AppIconPreset(
     /**
      * Returns the foreground layer the picker shows for this preset on [today]. Compose's
      * painterResource can't load the adaptive-icon XML, so the picker draws this over
-     * [R.color.ic_launcher_background], as AppLockVeil does.
+     * the background color for the selected preset.
      */
     @DrawableRes
     fun previewForegroundFor(today: LocalDate): Int =
