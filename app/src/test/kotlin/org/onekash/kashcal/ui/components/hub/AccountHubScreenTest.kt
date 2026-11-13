@@ -2,6 +2,7 @@ package org.onekash.kashcal.ui.components.hub
 
 import androidx.compose.material3.Text
 import androidx.compose.ui.test.assertCountEquals
+import androidx.compose.ui.test.assertHasNoClickAction
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.junit4.createComposeRule
@@ -18,6 +19,7 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.onekash.kashcal.BuildConfig
 import org.onekash.kashcal.ui.theme.KashCalTheme
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
@@ -26,7 +28,7 @@ import java.util.Locale
 /**
  * Compose tests for [AccountHubScreen]: each row invokes its own callback, the back arrow, the
  * hero's edit and save of initials, the three section headers with no nested Widgets sub-header,
- * the app-lock and app-permissions rows, and the data-ownership link. Opening and closing the
+ * the app-lock and app-permissions rows, and the version footer. Opening and closing the
  * overlay lives in the caller and isn't tested here. The `makeItYours` slot is stubbed so no Hilt
  * graph is needed, and a test checks it renders under its section header. Run the class alone:
  * Robolectric runs of more than one class hit a native crash.
@@ -53,11 +55,7 @@ class AccountHubScreenTest {
 
     private class Callbacks {
         var invites = 0
-        var jumpToDate = 0
-        var shareAvailability = 0
-        var tags = 0
         var settings = 0
-        var about = 0
         var back = 0
         var initials: String? = null
         var appLockToggled: Boolean? = null
@@ -79,11 +77,7 @@ class AccountHubScreenTest {
                     userInitials = userInitials,
                     onInitialsChange = { callbacks.initials = it },
                     onInvitesClick = { callbacks.invites++ },
-                    onJumpToDateClick = { callbacks.jumpToDate++ },
-                    onShareAvailabilityClick = { callbacks.shareAvailability++ },
-                    onTagsClick = { callbacks.tags++ },
                     onSettingsClick = { callbacks.settings++ },
-                    onAboutClick = { callbacks.about++ },
                     onBack = { callbacks.back++ },
                     appLockEnabled = appLockEnabled,
                     onToggleAppLock = { callbacks.appLockToggled = it },
@@ -105,43 +99,19 @@ class AccountHubScreenTest {
         composeTestRule.onNodeWithText("Invites").performClick()
         assertEquals(1, cb.invites)
 
-        composeTestRule.onNodeWithText("Go to date").performClick()
-        assertEquals(1, cb.jumpToDate)
-
-        composeTestRule.onNodeWithText("Share availability").performClick()
-        assertEquals(1, cb.shareAvailability)
-
         composeTestRule.onNodeWithText("Print your week").performClick()
         assertEquals(1, cb.printWeek)
 
-        composeTestRule.onNodeWithText("Manage tags").performClick()
-        assertEquals(1, cb.tags)
-
         composeTestRule.onNodeWithText("Accounts & Settings").performClick()
         assertEquals(1, cb.settings)
-
-        composeTestRule.onNodeWithText("About").performClick()
-        assertEquals(1, cb.about)
 
         composeTestRule.onNodeWithText("Recent changes").performClick()
         assertEquals(1, cb.recentChanges)
 
         // No row's tap fired a sibling's callback.
         assertEquals(1, cb.invites)
-        assertEquals(1, cb.shareAvailability)
         assertEquals(1, cb.printWeek)
         assertEquals(0, cb.back)
-    }
-
-    @Test
-    fun `print your week sits between share availability and manage tags`() {
-        render()
-
-        val share = composeTestRule.onNodeWithText("Share availability").getUnclippedBoundsInRoot()
-        val print = composeTestRule.onNodeWithText("Print your week").getUnclippedBoundsInRoot()
-        val tags = composeTestRule.onNodeWithText("Manage tags").getUnclippedBoundsInRoot()
-        assertTrue("below Share availability", print.top > share.top)
-        assertTrue("above Manage tags", print.top < tags.top)
     }
 
     @Test
@@ -150,9 +120,9 @@ class AccountHubScreenTest {
 
         val invites = composeTestRule.onNodeWithText("Invites").getUnclippedBoundsInRoot()
         val recent = composeTestRule.onNodeWithText("Recent changes").getUnclippedBoundsInRoot()
-        val goToDate = composeTestRule.onNodeWithText("Go to date").getUnclippedBoundsInRoot()
+        val printWeek = composeTestRule.onNodeWithText("Print your week").getUnclippedBoundsInRoot()
         assertTrue("below Invites", recent.top > invites.top)
-        assertTrue("above Go to date", recent.top < goToDate.top)
+        assertTrue("above Print your week", recent.top < printWeek.top)
         // Invites shows its count; Recent changes adds no second badge.
         composeTestRule.onAllNodesWithText("3").assertCountEquals(1)
     }
@@ -220,8 +190,15 @@ class AccountHubScreenTest {
     }
 
     @Test
-    fun `data-ownership link renders in Privacy and security`() {
+    fun `removed entries are absent and version has no click action`() {
         render()
-        composeTestRule.onNodeWithText("How your data stays yours").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Go to date").assertDoesNotExist()
+        composeTestRule.onNodeWithText("Share availability").assertDoesNotExist()
+        composeTestRule.onNodeWithText("Manage tags").assertDoesNotExist()
+        composeTestRule.onNodeWithText("About").assertDoesNotExist()
+        composeTestRule.onNodeWithText("How your data stays yours").assertDoesNotExist()
+        composeTestRule.onNodeWithText("Version ${BuildConfig.VERSION_NAME}")
+            .assertIsDisplayed()
+            .assertHasNoClickAction()
     }
 }

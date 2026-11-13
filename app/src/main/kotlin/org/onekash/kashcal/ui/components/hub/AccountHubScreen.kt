@@ -21,22 +21,16 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.filled.OpenInNew
 import androidx.compose.material.icons.filled.AppShortcut
 import androidx.compose.material.icons.filled.BrightnessMedium
-import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.History
-import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.LocalOffer
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.MailOutline
 import androidx.compose.material.icons.filled.ManageAccounts
 import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.Print
-import androidx.compose.material.icons.filled.Share
-import androidx.compose.material.icons.filled.Shield
 import androidx.compose.material.icons.filled.Widgets
 import androidx.compose.material3.Badge
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -83,6 +77,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import org.onekash.kashcal.BuildConfig
 import org.onekash.kashcal.R
 import org.onekash.kashcal.data.preferences.KashCalDataStore
 import org.onekash.kashcal.ui.appicon.AppIconUtility
@@ -108,7 +103,7 @@ import org.onekash.kashcal.widget.WidgetThemeSource
  * It has its own untitled top bar with a back arrow, and a [BackHandler] so system back
  * dismisses it through the same [onBack] as the arrow. A hero avatar edits the user's initials
  * inline. Below it: Accounts & settings, the personalization rows, the calendar destinations,
- * a Privacy & security section, and About.
+ * a Privacy & security section, and the app version.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -117,11 +112,7 @@ fun AccountHubScreen(
     userInitials: String,
     onInitialsChange: (String) -> Unit,
     onInvitesClick: () -> Unit,
-    onJumpToDateClick: () -> Unit,
-    onShareAvailabilityClick: () -> Unit,
-    onTagsClick: () -> Unit,
     onSettingsClick: () -> Unit,
-    onAboutClick: () -> Unit,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
     // App lock lives here, not in Settings, because the host activity owns the BiometricPrompt.
@@ -133,7 +124,7 @@ fun AccountHubScreen(
     onAppPermissionsClick: () -> Unit = {},
     // Recent changes opens a sheet over the hub, like Invites.
     onRecentChangesClick: () -> Unit = {},
-    // Print your week opens the print sheet over the hub, like Share availability.
+    // Print your week opens the print sheet over the hub.
     onPrintWeekClick: () -> Unit = {},
     // A slot so tests can stub it: the real section gets an AppearanceViewModel through
     // hiltViewModel(), which a plain Compose test has no graph for.
@@ -217,26 +208,9 @@ fun AccountHubScreen(
                 onClick = onRecentChangesClick,
             )
             HubDrawerItem(
-                label = stringResource(R.string.jump_to_date),
-                icon = Icons.Default.CalendarMonth,
-                onClick = onJumpToDateClick,
-            )
-            HubDrawerItem(
-                label = stringResource(R.string.share_availability_rail_label),
-                icon = Icons.Default.Share,
-                onClick = onShareAvailabilityClick,
-            )
-            HubDrawerItem(
                 label = stringResource(R.string.print_your_week),
                 icon = Icons.Default.Print,
                 onClick = onPrintWeekClick,
-            )
-            // Tag management opens on top of the hub, like Settings, without swapping the
-            // calendar view, so it has no `selected` state and the hub stays mounted beneath.
-            HubDrawerItem(
-                label = stringResource(R.string.tags_row_label),
-                icon = Icons.Default.LocalOffer,
-                onClick = onTagsClick,
             )
 
             HorizontalDivider(modifier = Modifier.padding(horizontal = 28.dp, vertical = 8.dp))
@@ -251,14 +225,17 @@ fun AccountHubScreen(
                 icon = Icons.Default.Security,
                 onClick = onAppPermissionsClick,
             )
-            PrivacyDataOwnershipRow()
 
             HorizontalDivider(modifier = Modifier.padding(horizontal = 28.dp, vertical = 8.dp))
 
-            HubDrawerItem(
-                label = stringResource(R.string.menu_about),
-                icon = Icons.Default.Info,
-                onClick = onAboutClick,
+            Text(
+                text = stringResource(R.string.about_version, BuildConfig.VERSION_NAME),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 28.dp, vertical = 16.dp),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center,
             )
         }
     }
@@ -622,43 +599,5 @@ private fun HubHero(
                 )
             }
         }
-    }
-}
-
-/** Shows the external link to the data-ownership policy, with an open-in-new icon. */
-@Composable
-private fun PrivacyDataOwnershipRow() {
-    val context = LocalContext.current
-    val label = stringResource(R.string.hub_privacy_data_ownership)
-    val opensInBrowser = stringResource(R.string.cd_opens_in_browser)
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(role = Role.Button) { ExternalLinks.openUrl(context, ExternalLinks.PRIVACY) }
-            // The OpenInNew glyph is the only "leaves the app" cue and TalkBack skips it, so the
-            // merged label carries "Opens in browser".
-            .semantics(mergeDescendants = true) { contentDescription = "$label, $opensInBrowser" }
-            .padding(horizontal = 28.dp, vertical = 16.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Icon(
-            imageVector = Icons.Default.Shield,
-            contentDescription = null,
-            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.size(24.dp),
-        )
-        Spacer(Modifier.width(12.dp))
-        Text(
-            text = label,
-            style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.weight(1f),
-        )
-        Icon(
-            imageVector = Icons.AutoMirrored.Filled.OpenInNew,
-            contentDescription = null,
-            tint = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.size(20.dp),
-        )
     }
 }

@@ -663,12 +663,6 @@ class MainActivity : FragmentActivity() {
                     onSettingsClick = {
                         launchInternalActivity(Intent(this@MainActivity, SettingsActivity::class.java))
                     },
-                    onTagsClick = {
-                        launchInternalActivity(
-                            Intent(this@MainActivity, SettingsActivity::class.java)
-                                .putExtra(SettingsActivity.EXTRA_OPEN_TAGS, true)
-                        )
-                    },
                     // App lock lives in the hub's Privacy and security section.
                     appLockEnabled = appLockEnabled,
                     onToggleAppLock = ::onToggleAppLock,
@@ -697,8 +691,6 @@ class MainActivity : FragmentActivity() {
                     drawerState = drawerState,
                     onDrawerToggleCalendar = { calendarId -> homeViewModel.toggleCalendarVisibility(calendarId) },
                     onDrawerToggleDeviceCalendarVisibility = { calendarId -> homeViewModel.toggleDeviceCalendarVisibility(calendarId) },
-                    // Share availability
-                    onShareAvailabilityClick = { homeViewModel.openShareAvailabilitySheet() },
                     // Print your week: the sheet opens on the week holding the date on screen
                     onPrintWeekClick = { anchor ->
                         printViewModel.open(
@@ -717,8 +709,6 @@ class MainActivity : FragmentActivity() {
                             ),
                         )
                     },
-                    // Info callbacks
-                    onInfoClick = { homeViewModel.openAboutSheet() },
                     // Avatar hub: persist edited initials
                     onInitialsChange = { homeViewModel.setUserInitials(it) },
                     // View picker callback

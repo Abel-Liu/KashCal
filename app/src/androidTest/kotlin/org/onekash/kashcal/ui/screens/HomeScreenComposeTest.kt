@@ -804,7 +804,7 @@ class HomeScreenComposeTest {
     }
 
     @Test
-    fun homeScreen_tapAvatarRevealsAllHubRows() {
+    fun homeScreen_tapAvatarOpensHub() {
         composeTestRule.setContent {
             HomeScreen(
                 uiState = createDefaultUiState(),
@@ -819,13 +819,8 @@ class HomeScreenComposeTest {
 
         composeTestRule.onNodeWithContentDescription("More menu").performClick()
         composeTestRule.onNodeWithText("Invites").assertIsDisplayed()
-        composeTestRule.onNodeWithText("Go to date").assertIsDisplayed()
-        composeTestRule.onNodeWithText("Share availability").assertIsDisplayed()
-        composeTestRule.onNodeWithText("Manage tags").assertIsDisplayed()
         composeTestRule.onNodeWithText("Accounts & Settings").assertIsDisplayed()
-        composeTestRule.onNodeWithText("About").assertIsDisplayed()
-        // Privacy & Security appears at the bottom of the hub.
-        composeTestRule.onNodeWithText("Privacy & Security").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Privacy & Security").assertExists()
     }
 
     @Test
@@ -848,28 +843,6 @@ class HomeScreenComposeTest {
         composeTestRule.onNodeWithContentDescription("More menu").performClick()
         composeTestRule.onNodeWithText("Invites").performClick()
         assert(invitesClicked)
-    }
-
-    @Test
-    fun homeScreen_hubTagsClickInvokesCallback() {
-        var tagsClicked = false
-
-        composeTestRule.setContent {
-            HomeScreen(
-                uiState = createDefaultUiState(),
-                isOnline = true,
-                onDateSelected = {},
-                onGoToToday = {},
-                onSetViewingMonth = { _, _ -> },
-                onClearNavigateToToday = {},
-                onClearNavigateToMonth = {},
-                onTagsClick = { tagsClicked = true }
-            )
-        }
-
-        composeTestRule.onNodeWithContentDescription("More menu").performClick()
-        composeTestRule.onNodeWithText("Manage tags").performClick()
-        assert(tagsClicked)
     }
 
     @Test

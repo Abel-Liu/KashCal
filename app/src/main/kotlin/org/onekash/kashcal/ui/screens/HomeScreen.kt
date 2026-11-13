@@ -260,9 +260,6 @@ fun HomeScreen(
     // The "Reminders are off" banner's buttons
     onRemindersOffTurnOn: () -> Unit = {},
     onRemindersOffNotNow: () -> Unit = {},
-    // Tag management, launched on top of the hub like Settings
-    onTagsClick: () -> Unit = {},
-    onShareAvailabilityClick: () -> Unit = {},
     // Print your week: called with the date on screen, which picks the week the sheet opens on
     onPrintWeekClick: (LocalDate) -> Unit = {},
     // Invitation inbox: count, open, dismiss and RSVP
@@ -277,8 +274,6 @@ fun HomeScreen(
     drawerState: DrawerState? = null,
     onDrawerToggleCalendar: (Long) -> Unit = {},
     onDrawerToggleDeviceCalendarVisibility: (Long) -> Unit = {},
-    // Info callbacks
-    onInfoClick: () -> Unit = {},
     // Avatar hub: persist edited initials
     onInitialsChange: (String) -> Unit = {},
     // View picker callback
@@ -389,7 +384,7 @@ fun HomeScreen(
     }
 
     // The week the Planner shows, as epoch ms, null in other views. The Planner never writes
-    // selectedDate, so its day-header and Jump to date snapshots, and the date picker, use this.
+    // selectedDate, so its day-header snapshot and date picker use this.
     val plannerWeekStartMs = if (uiState.viewMode == ViewMode.PLANNER) {
         WeekViewUtils.dateToEpochMs(
             plannerShownWeekStart(uiState.plannerAnchorDayCode, uiState.plannerWeekPagerPosition, uiState.firstDayOfWeek)
@@ -526,7 +521,6 @@ fun HomeScreen(
     )
 
     val drawerScope = rememberCoroutineScope()
-    var showJumpToDatePicker by rememberSaveable { mutableStateOf(false) }
     // App-permissions full-screen destination, opened over the hub. It has its own back arrow
     // and BackHandler; this flag drives its opaque overlay below.
     var showAppPermissions by rememberSaveable { mutableStateOf(false) }
@@ -538,7 +532,7 @@ fun HomeScreen(
     hubTransition.targetState = showHub
     val hubFullyHidden = hubTransition.isIdle && !hubTransition.currentState
 
-    // View mode and date captured before Jump to date or a week/3-day day-header drill-in
+    // View mode and date captured before a day-header drill-in
     // navigates, so a back press restores both. Null (0 for the date) when nothing is pending;
     // cleared once consumed. The date is a day code, so a zone change in between can't move it.
     var preJumpViewMode by rememberSaveable { mutableStateOf<ViewMode?>(null) }
@@ -862,7 +856,7 @@ fun HomeScreen(
                                             onPinchViewSwitch = onWeekPinchViewSwitch,
                                             onDayHeaderClick = { date ->
                                                 // Snapshot the view and date before drilling
-                                                // into DAY, the same way Jump to date does, so
+                                                // into DAY, so
                                                 // a back press restores the week or 3-day view
                                                 // and date. The drill-in doesn't change the
                                                 // startup view.
@@ -1140,32 +1134,9 @@ fun HomeScreen(
         )
     }
 
-    // Jump to date uses the 3-day and week views' sheet, so one tap navigates. It switches to DAY
-    // before navigating so the pager page is computed for day pages, not week pages.
-    if (showJumpToDatePicker) {
-        WeekViewDatePickerSheet(
-            currentWeekStartMs = plannerWeekStartMs
-                ?: uiState.selectedDate.takeIf { it != 0L } ?: System.currentTimeMillis(),
-            onDateSelected = { dateMs ->
-                preJumpViewMode = uiState.viewMode
-                preJumpDayCode = (plannerWeekStartMs ?: uiState.selectedDate)
-                    .let { if (it == 0L) 0 else DayPagerUtils.msToDayCode(it) }
-                onViewSelect(ViewMode.DAY)
-                onWeekDateSelected(dateMs)
-                showJumpToDatePicker = false
-                // Picking a date moves the calendar, so the hub, still mounted behind the
-                // picker, closes to show the result.
-                showHub = false
-            },
-            onDismiss = { showJumpToDatePicker = false },
-            firstDayOfWeek = uiState.firstDayOfWeek
-        )
-    }
-
-    // Back after a Jump to date or a day-header drill-in restores the view and date from before
-    // it. Single-shot: it clears the snapshot, so a second back press falls through.
+    // Back after a day-header drill-in restores the previous view and date once.
     val pending = preJumpViewMode
-    BackHandler(enabled = pending != null && !showJumpToDatePicker && !showHub) {
+    BackHandler(enabled = pending != null && !showHub) {
         onViewSelect(pending!!)
         if (preJumpDayCode != 0) {
             onWeekDateSelected(DayPagerUtils.dayCodeToMs(preJumpDayCode))
@@ -1198,12 +1169,9 @@ fun HomeScreen(
                 onInitialsChange = onInitialsChange,
                 // Destinations that open a sheet or Activity on top of the hub keep it
                 // mounted: the destination covers it, so the bare calendar doesn't flash,
-                // and dismissing the destination returns to the hub. Only Jump to date
-                // changes the calendar; the hub closes when a date is picked (above).
+                // and dismissing the destination returns to the hub.
                 onInvitesClick = onOpenInvitationInbox,
                 onRecentChangesClick = onOpenRecentChanges,
-                onJumpToDateClick = { showJumpToDatePicker = true },
-                onShareAvailabilityClick = onShareAvailabilityClick,
                 onPrintWeekClick = {
                     onPrintWeekClick(
                         printAnchorDate(
@@ -1219,9 +1187,7 @@ fun HomeScreen(
                         )
                     )
                 },
-                onTagsClick = onTagsClick,
                 onSettingsClick = onSettingsClick,
-                onAboutClick = onInfoClick,
                 onBack = { showHub = false },
                 appLockEnabled = appLockEnabled,
                 onToggleAppLock = onToggleAppLock,
@@ -2711,7 +2677,7 @@ private fun SearchDatePickerSheet(
 // ==================== Week View Date Picker ====================
 
 /**
- * Shows the go-to-date sheet used by the 3-day and week views and by Jump to date. One tap
+ * Shows the go-to-date sheet used by the 3-day and week views and the Planner. One tap
  * calls [onDateSelected] with the date and closes the sheet.
  */
 @OptIn(ExperimentalMaterial3Api::class)

@@ -1,5 +1,6 @@
 package org.onekash.kashcal.ui.components.hub
 
+import androidx.compose.ui.test.assertHasNoClickAction
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
@@ -10,6 +11,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.onekash.kashcal.BuildConfig
 
 /**
  * Compose UI tests for [AccountHubScreen], the full-screen account hub: its destination rows
@@ -34,26 +36,22 @@ class AccountHubScreenComposeTest {
                 userInitials = userInitials,
                 onInitialsChange = onInitialsChange,
                 onInvitesClick = {},
-                onJumpToDateClick = {},
-                onShareAvailabilityClick = {},
-                onTagsClick = {},
                 onSettingsClick = {},
-                onAboutClick = {},
                 onBack = onBack,
+                makeItYours = {},
             )
         }
     }
 
     @Test
-    fun rendersAllDestinationsInOrder() {
+    fun rendersDestinationsAndVersion() {
         setHub()
         composeTestRule.onNodeWithText("Invites").assertIsDisplayed()
-        composeTestRule.onNodeWithText("Go to date").assertIsDisplayed()
-        composeTestRule.onNodeWithText("Share availability").assertIsDisplayed()
-        composeTestRule.onNodeWithText("Manage tags").assertIsDisplayed()
         composeTestRule.onNodeWithText("Accounts & Settings").assertIsDisplayed()
-        composeTestRule.onNodeWithText("About").assertIsDisplayed()
-        composeTestRule.onNodeWithText("Privacy & Security").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Privacy & Security").assertExists()
+        composeTestRule.onNodeWithText("Version ${BuildConfig.VERSION_NAME}")
+            .assertExists()
+            .assertHasNoClickAction()
     }
 
     @Test
